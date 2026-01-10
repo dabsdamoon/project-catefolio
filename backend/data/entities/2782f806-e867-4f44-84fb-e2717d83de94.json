@@ -1,0 +1,11 @@
+{
+  "id": "2782f806-e867-4f44-84fb-e2717d83de94",
+  "name": "Foreign Patient",
+  "aliases": [
+    "외국인환자",
+    "global",
+    "overseas"
+  ],
+  "description": null,
+  "created_at": "2026-01-10T16:20:39.643844+00:00"
+}

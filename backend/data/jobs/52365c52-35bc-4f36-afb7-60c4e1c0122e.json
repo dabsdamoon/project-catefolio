@@ -1,0 +1,2591 @@
+{
+  "status": "processed",
+  "files": [
+    "20260110_20570104319531_113401.xls",
+    "20260110_20570104319557_113452.xls"
+  ],
+  "created_at": "2026-01-10T13:06:28.832481+00:00",
+  "summary": {
+    "total_income": 772018987.0,
+    "total_expenses": 773377423.0,
+    "net_savings": -1358436.0,
+    "entity_counts": {
+      "nan": 353
+    }
+  },
+  "transactions": [
+    {
+      "date": "2025-12-31",
+      "description": "GEOBLUE",
+      "amount": 5709318.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "정환욱(호움산부인과의원)",
+      "amount": -170000000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "신한86180874",
+      "amount": 124120.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "BC-746948320",
+      "amount": 58349.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "KB34245010",
+      "amount": 1145931.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-30",
+      "description": "CIGNAHEALTHANDLIFEINSURANCEC",
+      "amount": 293188.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-30",
+      "description": "롯데카드36200",
+      "amount": 5868.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-30",
+      "description": "신한86180874",
+      "amount": 34293.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-30",
+      "description": "BC-746948320",
+      "amount": 3851984.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-29",
+      "description": "CIGNAHEALTHANDLIFEINSURANCEC",
+      "amount": 252175.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-29",
+      "description": "현103873463",
+      "amount": 9700.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-29",
+      "description": "1/BUPA　INS",
+      "amount": 4958700.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-29",
+      "description": "롯데카드36200",
+      "amount": 151885.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-29",
+      "description": "삼성10826832",
+      "amount": 250900.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-29",
+      "description": "삼성10826832",
+      "amount": 527884.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-29",
+      "description": "NH12744093",
+      "amount": 64937.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-29",
+      "description": "하나93117154",
+      "amount": 291122.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-29",
+      "description": "신한86180874",
+      "amount": 173090.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-29",
+      "description": "BC-746948320",
+      "amount": 1002826.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-26",
+      "description": "부천시보건소",
+      "amount": 27170.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-26",
+      "description": "현103873463",
+      "amount": 134221.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-26",
+      "description": "20571604132561",
+      "amount": -1072602.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-26",
+      "description": "하나93117154",
+      "amount": 4414103.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-26",
+      "description": "신한86180874",
+      "amount": 279300.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-26",
+      "description": "KB34245010",
+      "amount": 4276380.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-24",
+      "description": "CIGNAHEALTHANDLIFEINSURANCEC",
+      "amount": 29650.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-24",
+      "description": "COVENTRY　H",
+      "amount": 24352872.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-24",
+      "description": "국민건강채권",
+      "amount": 9695450.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-24",
+      "description": "롯데카드36200",
+      "amount": 107168.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-24",
+      "description": "신한86180874",
+      "amount": 308336.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-24",
+      "description": "BC-746948320",
+      "amount": 3903988.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-24",
+      "description": "KB34245010",
+      "amount": 3800287.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-23",
+      "description": "CIGNAINTLHEALTHSERVICESBVBA",
+      "amount": 408210.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-23",
+      "description": "CIGNAHEALTHANDLIFEINSURANCEC",
+      "amount": 975213.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-23",
+      "description": "CIGNAHEALTHANDLIFEINSURANCEC",
+      "amount": 60455.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-23",
+      "description": "CIGNAHEALTHANDLIFEINSURANCEC",
+      "amount": 2842547.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-23",
+      "description": "현103873463",
+      "amount": 750167.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-23",
+      "description": "국민건강채권",
+      "amount": 71340000.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-23",
+      "description": "롯데카드36200",
+      "amount": 61614.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-23",
+      "description": "삼성10826832",
+      "amount": 1608269.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-23",
+      "description": "삼성10826832",
+      "amount": 205618.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-23",
+      "description": "NH12744093",
+      "amount": 39913.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-23",
+      "description": "하나93117154",
+      "amount": 563278.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-23",
+      "description": "신한86180874",
+      "amount": 1108875.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-23",
+      "description": "BC-746948320",
+      "amount": 215766.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-23",
+      "description": "KB34245010",
+      "amount": 484240.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-22",
+      "description": "정환욱(호움산부인과의원)",
+      "amount": -70000000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-22",
+      "description": "현103873463",
+      "amount": 2933126.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-22",
+      "description": "롯데카드36200",
+      "amount": 39120.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-22",
+      "description": "삼성10826832",
+      "amount": 39843.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-22",
+      "description": "하나93117154",
+      "amount": 1834535.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-22",
+      "description": "신한86180874",
+      "amount": 36609.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-22",
+      "description": "BC-746948320",
+      "amount": 117319.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-22",
+      "description": "KB34245010",
+      "amount": 437625.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-19",
+      "description": "현103873463",
+      "amount": 112176.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-19",
+      "description": "COVENTRY　H",
+      "amount": 4837830.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-19",
+      "description": "롯데카드36200",
+      "amount": 23541.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-19",
+      "description": "삼성10826832",
+      "amount": 48803.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-19",
+      "description": "삼성10826832",
+      "amount": 22369279.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-19",
+      "description": "YOOHOLL",
+      "amount": 22500.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-19",
+      "description": "NH12744093",
+      "amount": 19596.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-19",
+      "description": "하나93117154",
+      "amount": 1303396.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-19",
+      "description": "신한86180874",
+      "amount": 432799.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-19",
+      "description": "BC-746948320",
+      "amount": 229627.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-19",
+      "description": "KB34245010",
+      "amount": 182740.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-18",
+      "description": "TSS　ADMINI",
+      "amount": 3388400.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-18",
+      "description": "현103873463",
+      "amount": 139511.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-18",
+      "description": "NH12744093",
+      "amount": 4899.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-18",
+      "description": "하나93117154",
+      "amount": 548607.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-18",
+      "description": "신한86180874",
+      "amount": 6843.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-18",
+      "description": "BC-746948320",
+      "amount": 2018840.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-17",
+      "description": "CIGNAHEALTHANDLIFEINSURANCEC",
+      "amount": 3516054.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-17",
+      "description": "서재석",
+      "amount": 800000.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-17",
+      "description": "대전동구보건소(건강",
+      "amount": 19610.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-17",
+      "description": "서울강서구보건소보건",
+      "amount": 27170.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-17",
+      "description": "COVENTRY　H",
+      "amount": 93723.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-17",
+      "description": "롯데카드36200",
+      "amount": 210775.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-17",
+      "description": "신한86180874",
+      "amount": 169555.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-17",
+      "description": "BC-746948320",
+      "amount": 400523.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-17",
+      "description": "KB34245010",
+      "amount": 1154698.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-16",
+      "description": "김보선",
+      "amount": 150000.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-16",
+      "description": "현103873463",
+      "amount": 3247806.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-16",
+      "description": "롯데카드36200",
+      "amount": 87481.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-16",
+      "description": "삼성10826832",
+      "amount": 886650.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-16",
+      "description": "삼성10826832",
+      "amount": 3088002.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-16",
+      "description": "NH12744093",
+      "amount": 23124.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-16",
+      "description": "하나93117154",
+      "amount": 4404556.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-16",
+      "description": "신한86180874",
+      "amount": 100178.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-16",
+      "description": "BC-746948320",
+      "amount": 965013.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-16",
+      "description": "KB34245010",
+      "amount": 467001.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-15",
+      "description": "TSS　ADMINI",
+      "amount": 20660645.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-15",
+      "description": "강남보건소예방접종",
+      "amount": 54340.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-15",
+      "description": "현103873463",
+      "amount": 123443.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-15",
+      "description": "WISCONSIN",
+      "amount": 600000.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-15",
+      "description": "롯데카드36200",
+      "amount": 12170.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-15",
+      "description": "삼성10826832",
+      "amount": 1034109.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-15",
+      "description": "NH12744093",
+      "amount": 59130.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-15",
+      "description": "하나93117154",
+      "amount": 403725.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-15",
+      "description": "신한86180874",
+      "amount": 64893.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-15",
+      "description": "BC-746948320",
+      "amount": 236127.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-15",
+      "description": "KB34245010",
+      "amount": 74788.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-13",
+      "description": "Ramya",
+      "amount": 90000.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-13",
+      "description": "이자세금:18,130원",
+      "amount": 99658.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-12",
+      "description": "CIGNAEUINSURANCECOMPANYZURICH",
+      "amount": 697461.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-12",
+      "description": "CIGNALIFEINSURANCEOFEUROPENV",
+      "amount": 100407.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-12",
+      "description": "디에나",
+      "amount": 100000.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-12",
+      "description": "카카오페이",
+      "amount": -46000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-12",
+      "description": "카카오페이",
+      "amount": -46000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-12",
+      "description": "현103873463",
+      "amount": 993225.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-12",
+      "description": "1/BUPA　INS",
+      "amount": 3668100.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-12",
+      "description": "롯데카드36200",
+      "amount": 28429.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-12",
+      "description": "삼성10826832",
+      "amount": 292099.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-12",
+      "description": "삼성10826832",
+      "amount": 732146.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-12",
+      "description": "NH12744093",
+      "amount": 31158.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-12",
+      "description": "하나93117154",
+      "amount": 1176005.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-12",
+      "description": "신한86180874",
+      "amount": 630611.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-12",
+      "description": "BC-746948320",
+      "amount": 841751.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-12",
+      "description": "KB34245010",
+      "amount": 84513.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-11",
+      "description": "현103873463",
+      "amount": 99930.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-11",
+      "description": "카카오페이",
+      "amount": -48000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-11",
+      "description": "카카오페이",
+      "amount": -48000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-11",
+      "description": "하나93117154",
+      "amount": 85974.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-11",
+      "description": "BC-746948320",
+      "amount": 34468.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-10",
+      "description": "현103873463",
+      "amount": 9797.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-10",
+      "description": "롯데카드36200",
+      "amount": 3447824.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-10",
+      "description": "신한86180874",
+      "amount": 1276692.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-10",
+      "description": "BC-746948320",
+      "amount": 881364.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-10",
+      "description": "KB34245010",
+      "amount": 1004905.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-09",
+      "description": "이소희",
+      "amount": 100000.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-09",
+      "description": "CIGNAHEALTHANDLIFEINSURANCEC",
+      "amount": 499892.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-09",
+      "description": "1/HEALIXINTERNATIONALLTD-FCO(61",
+      "amount": 2498647.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-09",
+      "description": "BENEDICTL",
+      "amount": 20000.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-09",
+      "description": "현103873463",
+      "amount": 1918745.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-09",
+      "description": "정환욱(호움산부인과의원)",
+      "amount": -30000000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-09",
+      "description": "COVENTRY　H",
+      "amount": 8128535.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-09",
+      "description": "롯데카드36200",
+      "amount": 81761.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-09",
+      "description": "삼성10826832",
+      "amount": 10069795.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-09",
+      "description": "삼성10826832",
+      "amount": 140380.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-09",
+      "description": "NH12744093",
+      "amount": 13086.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-09",
+      "description": "하나93117154",
+      "amount": 13927898.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-09",
+      "description": "신한86180874",
+      "amount": 143926.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-09",
+      "description": "BC-746948320",
+      "amount": 123754.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-09",
+      "description": "KB34245010",
+      "amount": 518049.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-08",
+      "description": "카카오페이",
+      "amount": -46000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-08",
+      "description": "카카오페이",
+      "amount": -23000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-08",
+      "description": "AETNAINC",
+      "amount": 266897.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-08",
+      "description": "현103873463",
+      "amount": 380615.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-08",
+      "description": "삼성10826832",
+      "amount": 358691.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-08",
+      "description": "NH12744093",
+      "amount": 39306.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-08",
+      "description": "하나93117154",
+      "amount": 957931.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-08",
+      "description": "신한86180874",
+      "amount": 94664.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-08",
+      "description": "BC-746948320",
+      "amount": 92791.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-08",
+      "description": "KB34245010",
+      "amount": 51902.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-06",
+      "description": "카카오페이",
+      "amount": -46000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "분당보건감염병관리센",
+      "amount": 54340.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "1/BUPA　INS",
+      "amount": 401000.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "정환욱(호움산부인과의원)",
+      "amount": -90000000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "삼성10826832",
+      "amount": 351546.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "서울페이가맹",
+      "amount": 109900.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "하나93117154",
+      "amount": 1370518.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "신한86180874",
+      "amount": 3840837.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "BC-746948320",
+      "amount": 1079597.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "KB34245010",
+      "amount": 1688677.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-04",
+      "description": "서초구임신부인플시행",
+      "amount": 39220.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-04",
+      "description": "CIGNAHEALTHANDLIFEINSURANCEC",
+      "amount": 240923.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-04",
+      "description": "TSS　ADMINI",
+      "amount": 3264300.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-04",
+      "description": "REIDBREALA",
+      "amount": 300000.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-04",
+      "description": "1/UNITEDHE",
+      "amount": 420001.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-04",
+      "description": "현103873463",
+      "amount": 265989.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-04",
+      "description": "국민건강채권",
+      "amount": 7069090.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-04",
+      "description": "하나93117154",
+      "amount": 825775.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-04",
+      "description": "KB34245010",
+      "amount": 7388.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-03",
+      "description": "CIGNAHEALTHANDLIFEINSURANCEC",
+      "amount": 421339.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-03",
+      "description": "CIGNALIFEINSURANCEOFEUROPENV",
+      "amount": 1260510.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-03",
+      "description": "BLUECROSSBLUESHIELDGLOBALSOLUT",
+      "amount": 2999289.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-03",
+      "description": "1/CIGNA　HE",
+      "amount": 161200.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-03",
+      "description": "1/UNITEDHE",
+      "amount": 420001.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-03",
+      "description": "의료급여채권",
+      "amount": 234120.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-03",
+      "description": "롯데카드36200",
+      "amount": 89576.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-03",
+      "description": "신한86180874",
+      "amount": 333335.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-03",
+      "description": "BC-746948320",
+      "amount": 765272.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-03",
+      "description": "KB34245010",
+      "amount": 1023619.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-02",
+      "description": "katheri",
+      "amount": 100000.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-02",
+      "description": "수지구보건행정과",
+      "amount": 19610.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-02",
+      "description": "HENNER환불",
+      "amount": -2795060.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-02",
+      "description": "KUHN　AMY　C",
+      "amount": 293500.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-02",
+      "description": "CIGNAHEALTHANDLIFEINSURANCEC",
+      "amount": 3366640.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-02",
+      "description": "Maia",
+      "amount": 5100.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-02",
+      "description": "양평보건정책과",
+      "amount": 19610.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-02",
+      "description": "현103873463",
+      "amount": 383260.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-02",
+      "description": "롯데카드36200",
+      "amount": 204459.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-02",
+      "description": "삼성10826832",
+      "amount": 167649.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-02",
+      "description": "삼성10826832",
+      "amount": 2451116.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-02",
+      "description": "한도미사용수수료",
+      "amount": -110958.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-02",
+      "description": "NH12744093",
+      "amount": 73026.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-02",
+      "description": "하나93117154",
+      "amount": 4830618.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-02",
+      "description": "서울페이가맹",
+      "amount": 377620.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-02",
+      "description": "신한86180874",
+      "amount": 219792.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-02",
+      "description": "BC-746948320",
+      "amount": 654114.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-02",
+      "description": "KB34245010",
+      "amount": 550608.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-01",
+      "description": "CIGNAINTLHEALTHSERVICESBVBA",
+      "amount": 322977.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-01",
+      "description": "서초구B형주산기감염",
+      "amount": 71060.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-01",
+      "description": "1/CIGNA　EU",
+      "amount": 541120.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-01",
+      "description": "현103873463",
+      "amount": 100520.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-01",
+      "description": "롯데카드36200",
+      "amount": 3596044.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-01",
+      "description": "삼성10826832",
+      "amount": 2428230.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-01",
+      "description": "삼성10826832",
+      "amount": 12569.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-01",
+      "description": "하나93117154",
+      "amount": 411883.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-01",
+      "description": "신한86180874",
+      "amount": 20524.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-01",
+      "description": "BC-746948320",
+      "amount": 114416.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-01",
+      "description": "KB34245010",
+      "amount": 305350.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "퇴직예약출금",
+      "amount": -6294929.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "정환욱_개인사용반환",
+      "amount": 66000000.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "국세-정환욱",
+      "amount": -32363000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "국세-정환욱",
+      "amount": -28600000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "일동후디스(주)",
+      "amount": -102000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "(주)모유사",
+      "amount": -204000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "세스코",
+      "amount": -155000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "통인웨어하우스컴퍼니",
+      "amount": -121990.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "(주)메디엔비즈",
+      "amount": -110000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "임복규(문화그린)",
+      "amount": -232900.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "태성회계법인",
+      "amount": -1100000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "노무법인벽성",
+      "amount": -165000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "(주)에스씨메딕스",
+      "amount": -1080200.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "백이임(세영프라임)",
+      "amount": -228000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "조대석(대성의료종합",
+      "amount": -169400.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "(주)유한메디켐",
+      "amount": -246750.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "휴모스트　녹원　주식",
+      "amount": -800000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "(주)도원의료관리",
+      "amount": -1616300.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "(주)보령바이오파마",
+      "amount": -95800.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "광동제약(주)",
+      "amount": -1983200.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "조경주:청운약품",
+      "amount": -3011270.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "(의료)이원의료재단",
+      "amount": -390000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "유니메디",
+      "amount": -550000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "<재>서울의과학연구",
+      "amount": -20000000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "주식회사비씨아이코리",
+      "amount": -18700000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "(주)롯데캐슬메디치",
+      "amount": -2269300.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "서초롯데캐슬메디치",
+      "amount": -5314190.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "강명자(롯데캐슬메디",
+      "amount": -38500000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "대한적십자사혈액관리",
+      "amount": -119740.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-31",
+      "description": "정환욱(호움산부인과",
+      "amount": 170000000.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-30",
+      "description": "서울자동정환욱",
+      "amount": -257920.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-30",
+      "description": "한국방사선의학재단",
+      "amount": 20000.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-30",
+      "description": "주식회사　한국전화안",
+      "amount": -220000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-29",
+      "description": "대한적십자사혈액관리",
+      "amount": -119740.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-26",
+      "description": "벤츠파이낸셜",
+      "amount": -2571491.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-26",
+      "description": "현대카드대금",
+      "amount": -4098530.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-26",
+      "description": "캐드임팩트",
+      "amount": -88000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-26",
+      "description": "KT0548940912",
+      "amount": -152230.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-26",
+      "description": "KT통신요금12",
+      "amount": -55350.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-26",
+      "description": "KT8856845412",
+      "amount": -74900.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-26",
+      "description": "KT6925624412",
+      "amount": -1950.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-26",
+      "description": "KT통신요금12",
+      "amount": -57230.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-26",
+      "description": "코원에너지서비스",
+      "amount": -398170.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-26",
+      "description": "08119900006913",
+      "amount": -1600000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-25",
+      "description": "쿠팡와우월회비",
+      "amount": -7890.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-25",
+      "description": "느린인연",
+      "amount": 1.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-24",
+      "description": "김종열(조이플카페",
+      "amount": -69000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-24",
+      "description": "신용보증기금",
+      "amount": -1630560.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-24",
+      "description": "정환욱",
+      "amount": -6000000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-24",
+      "description": "정환욱",
+      "amount": -20000000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-23",
+      "description": "김태진",
+      "amount": -300000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-22",
+      "description": "Ｓ１（Ｎ５３７３",
+      "amount": -250800.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-22",
+      "description": "KT0595226612",
+      "amount": -4130.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-22",
+      "description": "ＳＫＴ９３４４",
+      "amount": -11000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-22",
+      "description": "KT8988722412",
+      "amount": -38150.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-22",
+      "description": "KT통신요금12",
+      "amount": -22000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-22",
+      "description": "코웨이렌탈12",
+      "amount": -20640.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-22",
+      "description": "코웨이렌탈12",
+      "amount": -21900.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-22",
+      "description": "코웨이렌탈12",
+      "amount": -21900.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-22",
+      "description": "코웨이렌탈12",
+      "amount": -50660.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-22",
+      "description": "코웨이렌탈12",
+      "amount": -50660.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-22",
+      "description": "코웨이렌탈12",
+      "amount": -20800.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-22",
+      "description": "코웨이렌탈12",
+      "amount": -20800.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-22",
+      "description": "코웨이렌탈12",
+      "amount": -20800.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-22",
+      "description": "코웨이렌탈12",
+      "amount": -20800.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-22",
+      "description": "코웨이렌탈12",
+      "amount": -20400.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-22",
+      "description": "코웨이렌탈12",
+      "amount": -20400.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-22",
+      "description": "KT7261900112",
+      "amount": -34760.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-22",
+      "description": "주식회사디어아이앤디",
+      "amount": -38000000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-22",
+      "description": "정환욱(호움산부인과",
+      "amount": 70000000.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-19",
+      "description": "205707**86　　　,2512-120회차",
+      "amount": -20000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-16",
+      "description": "nan",
+      "amount": -5000000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-15",
+      "description": "ChunNeungIT",
+      "amount": -613580.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-15",
+      "description": "KB카드출금",
+      "amount": -16231884.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-15",
+      "description": "김송환(송헬스케어)",
+      "amount": 3000000.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-13",
+      "description": "이자세금:9,920원",
+      "amount": 54554.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-12",
+      "description": "(주)신세계",
+      "amount": -14300000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-12",
+      "description": "(주)해피사",
+      "amount": -125000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-12",
+      "description": "대한적십자사혈액관리",
+      "amount": -59870.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-12",
+      "description": "대한적십자사혈액관리",
+      "amount": -59870.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-12",
+      "description": "(주)갓피플",
+      "amount": -171000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-11",
+      "description": "기은재",
+      "amount": -60000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-10",
+      "description": "２５１１산재보험",
+      "amount": -511550.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-10",
+      "description": "２５１１고용보험",
+      "amount": -1360900.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-10",
+      "description": "２５１１국민연금",
+      "amount": -6007900.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-10",
+      "description": "２５１１국민건강",
+      "amount": -11451260.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-10",
+      "description": "(주)신세계",
+      "amount": -7370000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-09",
+      "description": "김성현(보일러코리아",
+      "amount": -1280000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-09",
+      "description": "충일사한성자동차",
+      "amount": 8600.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-09",
+      "description": "정환욱(호움산부인과",
+      "amount": 30000000.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-09",
+      "description": "서울특징정환욱",
+      "amount": -461530.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-09",
+      "description": "국세-호움산부인",
+      "amount": -654310.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-09",
+      "description": "국세-호움산부인",
+      "amount": -3962130.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-08",
+      "description": "최선형",
+      "amount": -450000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "삼성화12013",
+      "amount": -21824.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "이형민(모임통장)",
+      "amount": -420000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "주인숙",
+      "amount": -600000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "VITALEADEL",
+      "amount": -72900.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "박성근(리버스피플)",
+      "amount": -712800.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "김순화",
+      "amount": -1300000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "VITALEADEL",
+      "amount": -1320000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "유영현",
+      "amount": -2224100.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "PIAO　CHUNY",
+      "amount": -1914660.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "조진호",
+      "amount": -790523.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "ZIGANTE　LI",
+      "amount": -2305570.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "이정원",
+      "amount": -174060.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "LLOYDPAIGE",
+      "amount": -967000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "HEWSONKARE",
+      "amount": -1934000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "박길순",
+      "amount": -1992020.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "정은우",
+      "amount": -4127030.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "최승원",
+      "amount": -2147510.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "하나기도윤",
+      "amount": -573886.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "하나김유나",
+      "amount": -2157810.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "정유정",
+      "amount": -3052602.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "신한이송",
+      "amount": -5090470.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "NOHHASUN",
+      "amount": -2937520.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "박수연",
+      "amount": -5119505.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "정은태",
+      "amount": -4237560.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "정미경",
+      "amount": -2390136.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "정혜윤",
+      "amount": -2497250.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "신한SHENOY　RIT",
+      "amount": -2542790.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "박서진",
+      "amount": -3230930.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "이시연",
+      "amount": -2004776.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "김지영",
+      "amount": -3590561.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "김신우",
+      "amount": -3090022.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "옥수현",
+      "amount": -2271720.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "하나최정자",
+      "amount": -337062.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "VITALEADELE",
+      "amount": -1790450.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "박주현",
+      "amount": -4455584.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "정인옥",
+      "amount": -2631030.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "박정숙",
+      "amount": -6748438.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "이혜민",
+      "amount": -3724200.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "박지호",
+      "amount": -3766260.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-05",
+      "description": "정환욱(호움산부인과",
+      "amount": 90000000.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-04",
+      "description": "삼성화andrear",
+      "amount": 261060.0,
+      "category": "Income",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-03",
+      "description": "김지섭(놂)",
+      "amount": -530000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-03",
+      "description": "이옥주",
+      "amount": -900000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-03",
+      "description": "주식회사　굿유",
+      "amount": -75410.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-03",
+      "description": "(주)해피사",
+      "amount": -82000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-02",
+      "description": "(주)이지엠인터내셔",
+      "amount": -199000.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-02",
+      "description": "Npay",
+      "amount": -17520.0,
+      "category": "Expense",
+      "entity": "nan"
+    },
+    {
+      "date": "2025-12-01",
+      "description": "nan",
+      "amount": -5000000.0,
+      "category": "Expense",
+      "entity": "nan"
+    }
+  ],
+  "charts": {
+    "daily_trend": {
+      "labels": [
+        "12/01",
+        "12/02",
+        "12/03",
+        "12/04",
+        "12/05",
+        "12/06",
+        "12/08",
+        "12/09",
+        "12/10",
+        "12/11",
+        "12/12",
+        "12/13",
+        "12/15",
+        "12/16",
+        "12/17",
+        "12/18",
+        "12/19",
+        "12/22",
+        "12/23",
+        "12/24",
+        "12/25",
+        "12/26",
+        "12/29",
+        "12/30",
+        "12/31"
+      ],
+      "income": [
+        7924693.0,
+        13716722.0,
+        7708261.0,
+        12693746.0,
+        98896415.0,
+        0.0,
+        2242797.0,
+        68193068.0,
+        6620582.0,
+        220372.0,
+        9375905.0,
+        244212.0,
+        26323370.0,
+        13419811.0,
+        6392108.0,
+        6107100.0,
+        29582287.0,
+        75438177.0,
+        80664165.0,
+        42197751.0,
+        1.0,
+        9131174.0,
+        7683219.0,
+        4205333.0,
+        243037718.0
+      ],
+      "expenses": [
+        5000000.0,
+        3122538.0,
+        1587410.0,
+        0.0,
+        181264559.0,
+        46000.0,
+        519000.0,
+        36357970.0,
+        26701610.0,
+        156000.0,
+        14807740.0,
+        0.0,
+        16845464.0,
+        5000000.0,
+        0.0,
+        0.0,
+        20000.0,
+        108650600.0,
+        300000.0,
+        27699560.0,
+        7890.0,
+        10170453.0,
+        119740.0,
+        477920.0,
+        334522969.0
+      ]
+    },
+    "expense_breakdown": {
+      "labels": [
+        "Expense"
+      ],
+      "values": [
+        773377423.0
+      ]
+    },
+    "entity_breakdown": {
+      "labels": [
+        "nan"
+      ],
+      "values": [
+        353
+      ]
+    }
+  },
+  "narrative": "Your uploaded files have been consolidated. Total income is $772,018,987.0, total expenses are $773,377,423.0, and net savings are $-1,358,436.0. Review the category breakdown to spot the largest cost drivers."
+}

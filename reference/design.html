@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinInsight - Transaction Analyzer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* 1. BRAND IDENTITY & THEME VARIABLES */
+        :root {
+            /* Vibrant, Gradient-ready Palette */
+            --color-primary: #4F46E5;
+            /* Indigo 600 */
+            --color-primary-hover: #4338CA;
+            /* Indigo 700 */
+            --color-secondary: #8B5CF6;
+            /* Violet 500 */
+            --color-accent: #10B981;
+            /* Emerald 500 */
+
+            --color-bg-app: #F8FAFC;
+            /* Cool Gray 50 (Slate-ish) */
+            --color-bg-card: #FFFFFF;
+
+            --color-text-main: #0F172A;
+            /* Slate 900 */
+            --color-text-muted: #64748B;
+            /* Slate 500 */
+
+            --color-success: #10B981;
+            --color-expense: #EF4444;
+            --color-warning: #F59E0B;
+
+            /* Modern Shadows & Radius */
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+            --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+
+            --radius-sm: 8px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--color-bg-app);
+            color: var(--color-text-main);
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+            line-height: 1.5;
+        }
+
+        /* Layout Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        /* 2. HEADER SECTION */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 48px;
+            padding: 20px 0;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-container svg {
+            filter: drop-shadow(0 4px 6px rgba(37, 99, 235, 0.3));
+        }
+
+        /* 3. UPLOAD SECTION (PRD: Multi-File Data Ingestion) */
+        .upload-section {
+            background: var(--color-bg-card);
+            border: 2px dashed #E2E8F0;
+            border-radius: var(--radius-lg);
+            padding: 64px;
+            text-align: center;
+            margin-bottom: 48px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-section:hover {
+            border-color: var(--color-primary);
+            background-color: #F8FAFC;
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 99px;
+            /* Pill shape */
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2), 0 2px 4px -1px rgba(79, 70, 229, 0.1);
+            font-size: 14px;
+            letter-spacing: 0.025em;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3), 0 4px 6px -2px rgba(79, 70, 229, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--color-text-main);
+            border: 1px solid #E2E8F0;
+            padding: 12px 24px;
+            border-radius: 99px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .btn-secondary:hover {
+            background: #F8FAFC;
+            border-color: #CBD5E1;
+            color: var(--color-primary);
+        }
+
+        /* 4. DASHBOARD GRID (PRD: Visualization Dashboard) */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            /* 3 Column Layout */
+            gap: 32px;
+            margin-bottom: 48px;
+        }
+
+        .card {
+            background: var(--color-bg-card);
+            padding: 32px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(226, 232, 240, 0.6);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+            border-color: rgba(226, 232, 240, 1);
+        }
+
+        /* Specific Card Styles */
+        .metric-value {
+            font-size: 48px;
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: -0.02em;
+            line-height: 1;
+            background: linear-gradient(135deg, var(--color-text-main) 0%, var(--color-text-muted) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card h4 {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+            color: var(--color-text-muted);
+        }
+
+        .card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            margin-top: 0;
+            color: var(--color-text-main);
+        }
+
+        .text-success {
+            color: var(--color-success);
+            -webkit-text-fill-color: var(--color-success) !important;
+        }
+
+        .text-expense {
+            color: var(--color-expense);
+            -webkit-text-fill-color: var(--color-expense) !important;
+        }
+
+        .col-span-2 {
+            grid-column: span 2;
+        }
+
+        .col-span-3 {
+            grid-column: span 3;
+        }
+
+        /* 5. NARRATIVE REPORT (PRD: Financial Report Generation) */
+        .report-content {
+            line-height: 1.8;
+            color: var(--color-text-muted);
+            font-size: 16px;
+        }
+
+        .highlight-box {
+            background-color: #F8FAFC;
+            border-left: 4px solid var(--color-primary);
+            padding: 24px;
+            margin: 24px 0;
+            font-size: 15px;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* 6. FILTER BAR (PRD: Business vs Personal) */
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 32px;
+            align-items: center;
+            background: white;
+            padding: 6px 8px;
+            border-radius: 99px;
+            width: fit-content;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid #E2E8F0;
+        }
+
+        .filter-bar span {
+            font-weight: 600;
+            color: var(--color-text-muted);
+            font-size: 14px;
+            padding-left: 12px;
+            padding-right: 8px;
+        }
+
+        .filter-bar label {
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 99px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            color: var(--color-text-muted);
+            display: flex;
+            align-items: center;
+        }
+
+        .filter-bar label:hover {
+            color: var(--color-primary);
+            background: #F1F5F9;
+        }
+
+        .filter-bar input[type="radio"] {
+            display: none;
+        }
+
+        .filter-bar label:has(input:checked) {
+            background: var(--color-primary);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <div class="logo-container">
+                <svg width="40" height="40" viewBox="0 0 200 200" fill="none">
+                    <rect x="0" y="0" width="200" height="200" rx="40" fill="url(#logoGradient)" />
+                    <defs>
+                        <linearGradient id="logoGradient" x1="0" y1="0" x2="200" y2="200"
+                            gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#4F46E5" />
+                            <stop offset="1" stop-color="#8B5CF6" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M50 140L80 90L120 130L160 50" stroke="white" stroke-width="20" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+                <h1 style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em;">FinInsight</h1>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn-secondary">Export PDF</button>
+                <button class="btn-primary">Export Excel</button>
+            </div>
+        </header>
+
+        <section class="upload-section" id="drop-zone">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.5"
+                style="margin-bottom: 24px;">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+            </svg>
+            <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 8px;">Upload Financial Records</h3>
+            <p style="color: var(--color-text-muted); margin-bottom: 24px;">Drag & drop your Excel or CSV files here
+                (Max 10 files)</p>
+            <button class="btn-primary">Select Files</button>
+        </section>
+
+        <div class="filter-bar">
+            <span>View Mode:</span>
+            <label><input type="radio" name="view" checked> Combined</label>
+            <label><input type="radio" name="view"> Personal Only</label>
+            <label><input type="radio" name="view"> Business Only</label>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card">
+                <h4>Total Income</h4>
+                <div class="metric-value text-success">$5,240</div>
+            </div>
+            <div class="card">
+                <h4>Total Expenses</h4>
+                <div class="metric-value text-expense">$3,150</div>
+            </div>
+            <div class="card">
+                <h4>Net Savings</h4>
+                <div class="metric-value"
+                    style="color: var(--color-primary); -webkit-text-fill-color: var(--color-primary) !important;">
+                    $2,090</div>
+            </div>
+
+            <div class="card col-span-2">
+                <h3>Daily Spending Trend</h3>
+                <canvas id="dailyTrendChart" height="200"></canvas>
+            </div>
+
+            <div class="card">
+                <h3>Expense Breakdown</h3>
+                <canvas id="categoryPieChart" height="200"></canvas>
+            </div>
+
+            <div class="card col-span-3">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3>AI Financial Insights</h3>
+                    <span
+                        style="font-size:12px; background:#DBEAFE; color:#1E40AF; padding:4px 8px; border-radius:12px;">Generated
+                        by GraphRAG</span>
+                </div>
+
+                <div class="report-content">
+                    <p><strong>Summary:</strong> In the period from Jan 1 to Jan 31, you earned $5,240 and spent $3,150.
+                        Your largest expense category was <em>Housing</em> (30%).</p>
+
+                    <div class="highlight-box">
+                        <strong>⚠️ Unusual Activity Detected:</strong>
+                        Your spending on "Travel" spiked to 15% this month due to a one-time transaction labeled
+                        "Conference Ticket". This appears to be a business expense.
+                    </div>
+
+                    <p><strong>Recommendation:</strong> Consider tagging the conference ticket as "Business" to deduct
+                        it from your personal spending analysis.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // TODO: Initialize Chart.js instances here using the 'dailyTrendChart' and 'categoryPieChart' IDs.
+        // TODO: Implement Drag & Drop listeners on 'drop-zone'.
+        // TODO: Connect to Cloud Run API endpoints: POST /upload, GET /visualize .
+    </script>
+</body>
+
+</html>
