@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import hashlib
 from io import BytesIO
 import json
 import os
@@ -19,6 +20,12 @@ from app.services.inference_service import InferenceService
 logger = get_logger("catefolio.services.transaction")
 
 
+def _transaction_signature(txn: dict[str, Any]) -> str:
+    """Generate a unique signature for a transaction based on date, description, amount."""
+    key = f"{txn.get('date', '')}|{txn.get('description', '')}|{txn.get('amount', 0)}"
+    return hashlib.md5(key.encode()).hexdigest()
+
+
 class TransactionService:
     MAX_FILES_PER_UPLOAD = 10
     MAX_ROWS_PER_FILE = 10000
@@ -29,11 +36,52 @@ class TransactionService:
         self.categories = self._load_categories()
         logger.info(f"TransactionService initialized with {len(self.categories)} categories")
 
+    def check_duplicates(
+        self,
+        files: list[UploadFile],
+        user_id: str,
+    ) -> dict[str, Any] | None:
+        """Check if uploaded files would create duplicate transactions.
+
+        Args:
+            files: List of uploaded files to check
+            user_id: Owner's user ID
+
+        Returns:
+            Existing job info if duplicate found, None otherwise
+        """
+        transactions: list[dict[str, Any]] = []
+        for file in files:
+            try:
+                df = self._read_dataframe(file)
+                file_transactions = self._prepare_transactions(df)
+                transactions.extend(file_transactions)
+                file.file.seek(0)  # Reset for later use
+            except Exception:
+                continue
+
+        if not transactions:
+            return None
+
+        content_signature = self._compute_content_signature(transactions)
+        existing = self.repository.find_job_by_signature(content_signature, user_id)
+
+        if existing:
+            return {
+                "job_id": existing["id"],
+                "created_at": existing.get("created_at"),
+                "transaction_count": existing.get("transaction_count", 0),
+                "categorized": existing.get("categorized", False),
+                "content_signature": content_signature,
+            }
+        return None
+
     def process_upload(
         self,
         files: list[UploadFile],
         categorize: bool = False,
         user_id: str | None = None,
+        overwrite_job_id: str | None = None,
     ) -> dict[str, Any]:
         """Process uploaded transaction files.
 
@@ -41,6 +89,7 @@ class TransactionService:
             files: List of uploaded files to process
             categorize: Whether to run AI categorization (default: False)
             user_id: Owner's user ID for multi-tenant isolation
+            overwrite_job_id: If provided, delete this job before creating new one
         """
         if len(files) > self.MAX_FILES_PER_UPLOAD:
             logger.warning(f"Upload rejected: {len(files)} files exceeds limit of {self.MAX_FILES_PER_UPLOAD}")
@@ -48,6 +97,11 @@ class TransactionService:
                 status_code=400,
                 detail=f"Maximum {self.MAX_FILES_PER_UPLOAD} files per upload.",
             )
+
+        # Delete existing job if overwriting
+        if overwrite_job_id and user_id:
+            logger.info(f"Overwriting existing job: {overwrite_job_id}")
+            self.repository.delete_job(overwrite_job_id, user_id=user_id)
 
         logger.info(f"Processing upload: {len(files)} files, categorize={categorize}")
         transactions: list[dict[str, Any]] = []
@@ -68,6 +122,9 @@ class TransactionService:
                     status_code=400,
                     detail=f"Failed to process file '{file.filename}': {str(e)}",
                 )
+
+        # Compute content signature for duplicate detection
+        content_signature = self._compute_content_signature(transactions)
 
         job_id = str(uuid4())
         logger.info(f"Created job {job_id} with {len(transactions)} total transactions")
@@ -104,8 +161,13 @@ class TransactionService:
             "categories": [cat["name"] for cat in self.categories],
             "categorized": categorize and bool(self.categories),
             "narrative": self._build_narrative(summary),
+            "content_signature": content_signature,
         }
+        # save_job pops transactions from payload, so keep a reference
+        transactions_copy = transactions
         self.repository.save_job(job_id, payload, user_id=user_id)
+        # Restore transactions after save (save_job pops it for sub-collection storage)
+        payload["transactions"] = transactions_copy
         payload["job_id"] = job_id
 
         logger.info(
@@ -137,6 +199,19 @@ class TransactionService:
     @staticmethod
     def _utc_now_iso() -> str:
         return datetime.now(timezone.utc).isoformat()
+
+    @staticmethod
+    def _compute_content_signature(transactions: list[dict[str, Any]]) -> str:
+        """Compute a signature for transaction content to detect duplicates."""
+        # Sort transactions to ensure consistent ordering
+        sorted_txns = sorted(
+            transactions,
+            key=lambda t: (t.get("date", ""), t.get("description", ""), t.get("amount", 0))
+        )
+        # Create signature from all transaction signatures
+        signatures = [_transaction_signature(t) for t in sorted_txns]
+        combined = "|".join(signatures)
+        return hashlib.md5(combined.encode()).hexdigest()
 
     @staticmethod
     def _normalize_columns(columns: list[str]) -> dict[str, str]:

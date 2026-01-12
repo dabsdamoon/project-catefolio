@@ -8,6 +8,8 @@ class UploadResponse(BaseModel):
     status: str
     files_received: int
     created_at: str
+    is_duplicate: bool = False
+    was_categorized: bool = False
 
 
 class ResultResponse(BaseModel):

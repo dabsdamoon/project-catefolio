@@ -38,6 +38,7 @@ def health() -> dict[str, str]:
 async def upload_files(
     files: list[UploadFile] = File(...),
     categorize: bool = False,
+    force_reprocess: bool = False,
     user: FirebaseUser = Depends(get_current_user),
 ) -> UploadResponse:
     """Upload and process transaction files.
@@ -45,14 +46,48 @@ async def upload_files(
     Args:
         files: List of CSV/XLS/XLSX files to process
         categorize: Whether to run AI categorization (default: False, as it's in testing)
+        force_reprocess: If True, delete existing duplicate and re-process
         user: Authenticated user (from Firebase Auth or demo mode)
+
+    Returns:
+        UploadResponse with job info. Returns existing job if duplicate found.
     """
-    payload = _service.process_upload(files, categorize=categorize, user_id=user.uid)
+    # Check for duplicates
+    for f in files:
+        f.file.seek(0)
+    duplicate = _service.check_duplicates(files, user_id=user.uid)
+
+    if duplicate and not force_reprocess:
+        # Return existing job info - no need to re-process
+        return UploadResponse(
+            job_id=duplicate["job_id"],
+            status="existing",
+            files_received=len(files),
+            created_at=duplicate["created_at"],
+            is_duplicate=True,
+            was_categorized=duplicate["categorized"],
+        )
+
+    # Reset file positions for processing
+    for f in files:
+        f.file.seek(0)
+
+    # If force_reprocess and duplicate exists, delete the old one
+    overwrite_job_id = duplicate["job_id"] if duplicate and force_reprocess else None
+
+    payload = _service.process_upload(
+        files,
+        categorize=categorize,
+        user_id=user.uid,
+        overwrite_job_id=overwrite_job_id,
+    )
     return UploadResponse(
         job_id=payload["job_id"],
         status=payload["status"],
         files_received=len(files),
         created_at=payload["created_at"],
+        is_duplicate=False,
+        was_categorized=payload.get("categorized", False),
     )
 
 
@@ -156,6 +191,7 @@ def infer_graph(
 async def convert_template(
     files: list[UploadFile] = File(...),
     categorize: bool = False,
+    force_reprocess: bool = False,
     user: FirebaseUser = Depends(get_current_user),
 ) -> StreamingResponse:
     """Convert transaction files to Excel template format.
@@ -163,10 +199,37 @@ async def convert_template(
     Args:
         files: List of CSV/XLS/XLSX files to process
         categorize: Whether to run AI categorization (default: False)
+        force_reprocess: If True, delete existing duplicate and re-process
         user: Authenticated user
+
+    Returns:
+        Excel file. If duplicate found, returns template from existing job data.
     """
-    payload = _service.process_upload(files, categorize=categorize, user_id=user.uid)
-    template_bytes = _template_service.build_template_bytes(payload["transactions"])
+    # Check for duplicates
+    for f in files:
+        f.file.seek(0)
+    duplicate = _service.check_duplicates(files, user_id=user.uid)
+
+    if duplicate and not force_reprocess:
+        # Use existing job's transactions for template
+        existing_job = _service.get_job(duplicate["job_id"], user_id=user.uid)
+        template_bytes = _template_service.build_template_bytes(existing_job["transactions"])
+    else:
+        # Reset file positions for processing
+        for f in files:
+            f.file.seek(0)
+
+        # If force_reprocess and duplicate exists, delete the old one
+        overwrite_job_id = duplicate["job_id"] if duplicate and force_reprocess else None
+
+        payload = _service.process_upload(
+            files,
+            categorize=categorize,
+            user_id=user.uid,
+            overwrite_job_id=overwrite_job_id,
+        )
+        template_bytes = _template_service.build_template_bytes(payload["transactions"])
+
     filename = "account_template_output.xlsx"
     return StreamingResponse(
         BytesIO(template_bytes),

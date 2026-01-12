@@ -4,7 +4,8 @@
       "Bash(curl:*)",
       "Bash(python3 -m json.tool:*)",
       "Bash(npm run build:*)",
-      "Skill(pr-creator)"
+      "Skill(pr-creator)",
+      "Skill(frontend-design)"
     ]
   }
 }
