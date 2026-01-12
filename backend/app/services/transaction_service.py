@@ -13,7 +13,7 @@ from fastapi import HTTPException, UploadFile
 
 from app.core.exceptions import FileProcessingError, JobNotFoundError, ValidationError
 from app.core.logging import get_logger
-from app.repositories.local_repo import LocalRepository
+from app.repositories.firestore_repo import FirestoreRepository
 from app.services.inference_service import InferenceService
 
 logger = get_logger("catefolio.services.transaction")
@@ -23,18 +23,24 @@ class TransactionService:
     MAX_FILES_PER_UPLOAD = 10
     MAX_ROWS_PER_FILE = 10000
 
-    def __init__(self, repository: LocalRepository) -> None:
+    def __init__(self, repository: FirestoreRepository) -> None:
         self.repository = repository
         self.inference = InferenceService()
         self.categories = self._load_categories()
         logger.info(f"TransactionService initialized with {len(self.categories)} categories")
 
-    def process_upload(self, files: list[UploadFile], categorize: bool = False) -> dict[str, Any]:
+    def process_upload(
+        self,
+        files: list[UploadFile],
+        categorize: bool = False,
+        user_id: str | None = None,
+    ) -> dict[str, Any]:
         """Process uploaded transaction files.
 
         Args:
             files: List of uploaded files to process
             categorize: Whether to run AI categorization (default: False)
+            user_id: Owner's user ID for multi-tenant isolation
         """
         if len(files) > self.MAX_FILES_PER_UPLOAD:
             logger.warning(f"Upload rejected: {len(files)} files exceeds limit of {self.MAX_FILES_PER_UPLOAD}")
@@ -52,7 +58,7 @@ class TransactionService:
                 file_transactions = self._prepare_transactions(df)
                 transactions.extend(file_transactions)
                 file.file.seek(0)
-                self.repository.save_upload(file.filename, file.file.read())
+                self.repository.save_upload(file.filename, file.file.read(), user_id=user_id)
                 logger.info(f"Processed file '{file.filename}': {len(file_transactions)} transactions")
             except HTTPException:
                 raise
@@ -67,7 +73,7 @@ class TransactionService:
         logger.info(f"Created job {job_id} with {len(transactions)} total transactions")
 
         rules: list[dict[str, str]] = []
-        user_entities = self.repository.list_entities()
+        user_entities = self.repository.list_entities(user_id=user_id)
         user_rules = self._rules_from_entities(user_entities)
         logger.debug(f"Loaded {len(user_entities)} user entities, {len(user_rules)} user rules")
 
@@ -99,7 +105,7 @@ class TransactionService:
             "categorized": categorize and bool(self.categories),
             "narrative": self._build_narrative(summary),
         }
-        self.repository.save_job(job_id, payload)
+        self.repository.save_job(job_id, payload, user_id=user_id)
         payload["job_id"] = job_id
 
         logger.info(
@@ -108,11 +114,23 @@ class TransactionService:
         )
         return payload
 
-    def get_job(self, job_id: str) -> dict[str, Any]:
+    def get_job(self, job_id: str, user_id: str | None = None) -> dict[str, Any]:
+        """Get a job by ID.
+
+        Args:
+            job_id: Job's unique identifier
+            user_id: If provided, verify ownership
+
+        Returns:
+            Job data
+
+        Raises:
+            HTTPException: If job not found or unauthorized
+        """
         logger.debug(f"Retrieving job: {job_id}")
-        job = self.repository.load_job(job_id)
+        job = self.repository.load_job(job_id, user_id=user_id)
         if not job:
-            logger.warning(f"Job not found: {job_id}")
+            logger.warning(f"Job not found or unauthorized: {job_id}")
             raise HTTPException(status_code=404, detail="Job not found.")
         return job
 

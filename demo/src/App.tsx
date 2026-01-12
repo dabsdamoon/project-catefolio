@@ -4,6 +4,26 @@ import './App.css'
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000'
 const DATES_PER_PAGE = 6
 
+// Demo mode: Generate or retrieve a unique session ID
+const getDemoUserId = (): string => {
+  const STORAGE_KEY = 'catefolio_demo_user_id'
+  let userId = localStorage.getItem(STORAGE_KEY)
+  if (!userId) {
+    userId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+    localStorage.setItem(STORAGE_KEY, userId)
+  }
+  return userId
+}
+
+const DEMO_USER_ID = getDemoUserId()
+
+// API helper with demo auth header
+const apiFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
+  const headers = new Headers(options.headers)
+  headers.set('X-Demo-User-Id', DEMO_USER_ID)
+  return fetch(url, { ...options, headers })
+}
+
 type Summary = {
   total_income: number
   total_expenses: number
@@ -68,7 +88,7 @@ function App() {
     setCategoriesLoading(true)
     setCategoriesMessage('')
     try {
-      const response = await fetch(`${API_BASE}/categories`)
+      const response = await apiFetch(`${API_BASE}/categories`)
       if (response.ok) {
         const data: Category[] = await response.json()
         setExpenseCategories(data)
@@ -96,7 +116,7 @@ function App() {
           .map((k) => k.trim())
           .filter(Boolean),
       }))
-      const response = await fetch(`${API_BASE}/categories`, {
+      const response = await apiFetch(`${API_BASE}/categories`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(categoriesToSave),
@@ -178,7 +198,7 @@ function App() {
       // Step 1: Upload files
       setUploadProgress('Uploading files to server...')
       const uploadUrl = `${API_BASE}/upload?categorize=${categorize}`
-      const uploadResponse = await fetch(uploadUrl, {
+      const uploadResponse = await apiFetch(uploadUrl, {
         method: 'POST',
         body: buildFormData(files),
       })
@@ -195,7 +215,7 @@ function App() {
       setUploadProgress(categorize ? 'Processing transactions with AI...' : 'Processing transactions...')
       setStatus(categorize ? 'Processing... AI is categorizing your transactions.' : 'Processing transactions...')
 
-      const resultResponse = await fetch(`${API_BASE}/result/${uploadData.job_id}`)
+      const resultResponse = await apiFetch(`${API_BASE}/result/${uploadData.job_id}`)
       if (!resultResponse.ok) {
         throw new Error(`Failed to fetch results (${resultResponse.status})`)
       }
@@ -209,7 +229,7 @@ function App() {
       // Step 3: Generate template
       setUploadProgress('Generating Excel template...')
       const templateUrl = `${API_BASE}/template/convert?categorize=${categorize}`
-      const templateResponse = await fetch(templateUrl, {
+      const templateResponse = await apiFetch(templateUrl, {
         method: 'POST',
         body: buildFormData(files),
       })
