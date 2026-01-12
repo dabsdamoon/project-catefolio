@@ -128,21 +128,26 @@ function App() {
   const csvFileInputRef = useRef<HTMLInputElement | null>(null)
 
   const isUploading = uploadState === 'uploading' || uploadState === 'processing'
+  const [dashboardError, setDashboardError] = useState<string | null>(null)
 
-  const loadDashboardTransactions = async () => {
+  const loadDashboardTransactions = useCallback(async () => {
     setDashboardLoading(true)
+    setDashboardError(null)
     try {
       const response = await apiFetch(`${API_BASE}/transactions`)
       if (response.ok) {
         const data = await response.json()
         setDashboardTransactions(data.transactions || [])
+      } else {
+        setDashboardError('Failed to load transactions')
       }
     } catch (error) {
       console.error('Failed to load dashboard transactions:', error)
+      setDashboardError('Failed to load transactions. Please try again.')
     } finally {
       setDashboardLoading(false)
     }
-  }
+  }, [])
 
   const handleClearAllData = async () => {
     if (!confirm('Are you sure you want to delete all your transaction data? This cannot be undone.')) {
@@ -165,16 +170,7 @@ function App() {
     }
   }
 
-  useEffect(() => {
-    if (activeView === 'dashboard') {
-      loadDashboardTransactions()
-    }
-    if (activeView === 'categories') {
-      loadCategories()
-    }
-  }, [activeView])
-
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async () => {
     setCategoriesLoading(true)
     setCategoriesMessage('')
     try {
@@ -190,13 +186,25 @@ function App() {
         })
         setKeywordInputs(inputs)
         setKeywordArrays(arrays)
+      } else {
+        setCategoriesMessage('Failed to load categories')
       }
-    } catch {
+    } catch (error) {
+      console.error('Failed to load categories:', error)
       setCategoriesMessage('Failed to load categories')
     } finally {
       setCategoriesLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (activeView === 'dashboard') {
+      loadDashboardTransactions()
+    }
+    if (activeView === 'categories') {
+      loadCategories()
+    }
+  }, [activeView, loadDashboardTransactions, loadCategories])
 
   const saveCategories = async () => {
     setCategoriesSaving(true)
@@ -217,7 +225,8 @@ function App() {
       } else {
         setCategoriesMessage('Failed to save categories')
       }
-    } catch {
+    } catch (error) {
+      console.error('Failed to save categories:', error)
       setCategoriesMessage('Failed to save categories')
     } finally {
       setCategoriesSaving(false)
@@ -283,7 +292,8 @@ function App() {
       })
       setCsvImportMatches(matches)
     } catch (error) {
-      setCategoriesMessage('Failed to parse CSV file. Please check the format.')
+      console.error('Failed to parse TSV file:', error)
+      setCategoriesMessage('Failed to parse TSV file. Please check the format.')
     }
   }
 
@@ -637,32 +647,32 @@ function App() {
             <div className="logo-sub">Transaction Workspace</div>
           </div>
         </div>
-        <div className="nav-group">
-          <div
+        <nav className="nav-group">
+          <button
             className={`nav-item ${activeView === 'dashboard' ? 'active' : ''}`}
             onClick={() => setActiveView('dashboard')}
           >
             Dashboard
-          </div>
-          <div
+          </button>
+          <button
             className={`nav-item ${activeView === 'upload' ? 'active' : ''}`}
             onClick={() => setActiveView('upload')}
           >
             Upload Data
-          </div>
-          <div
+          </button>
+          <button
             className={`nav-item ${activeView === 'categories' ? 'active' : ''}`}
             onClick={() => setActiveView('categories')}
           >
             Set Transaction Categories
-          </div>
-          <div
+          </button>
+          <button
             className={`nav-item ${activeView === 'exports' ? 'active' : ''}`}
             onClick={() => setActiveView('exports')}
           >
             Exports
-          </div>
-        </div>
+          </button>
+        </nav>
       </aside>
 
       <main className="main">
@@ -1099,6 +1109,7 @@ function App() {
           <InsightsDashboard
             transactions={dashboardTransactions}
             loading={dashboardLoading}
+            error={dashboardError}
             onClearAllData={handleClearAllData}
           />
         )}

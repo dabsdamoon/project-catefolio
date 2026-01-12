@@ -4,10 +4,11 @@ from pathlib import Path
 from typing import Optional
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 
 from app.auth.firebase_auth import FirebaseUser, get_current_user, get_optional_user
+from app.core.utils import transaction_signature
 from app.repositories.firestore_repo import FirestoreRepository
 from app.schemas.models import (
     CategoryItem,
@@ -305,7 +306,7 @@ def delete_job(
     """Delete a specific job and its transactions."""
     deleted = _repo.delete_job(job_id, user_id=user.uid)
     if not deleted:
-        return {"status": "not_found", "job_id": job_id}
+        raise HTTPException(status_code=404, detail="Job not found")
     return {"status": "deleted", "job_id": job_id}
 
 
@@ -321,13 +322,6 @@ def delete_all_jobs(
         if job_id and _repo.delete_job(job_id, user_id=user.uid):
             deleted_count += 1
     return {"status": "deleted", "deleted_count": deleted_count}
-
-
-def _transaction_signature(txn: dict) -> str:
-    """Generate a unique signature for a transaction based on date, description, amount."""
-    import hashlib
-    key = f"{txn.get('date', '')}|{txn.get('description', '')}|{txn.get('amount', 0)}"
-    return hashlib.md5(key.encode()).hexdigest()
 
 
 @router.get("/transactions")
@@ -358,7 +352,7 @@ def get_all_transactions(
 
         transactions = job.get("transactions", [])
         for txn in transactions:
-            sig = _transaction_signature(txn)
+            sig = transaction_signature(txn)
             if sig not in seen_signatures:
                 seen_signatures.add(sig)
                 unique_transactions.append(txn)

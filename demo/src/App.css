@@ -65,6 +65,14 @@
 }
 
 .nav-item {
+  /* Button reset */
+  border: none;
+  background: none;
+  text-align: left;
+  font-family: inherit;
+  width: 100%;
+
+  /* Layout */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -73,6 +81,16 @@
   font-size: 14px;
   color: var(--color-ink-soft);
   cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.nav-item:hover:not(.active) {
+  background: #f8fafc;
+}
+
+.nav-item:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
 }
 
 .nav-item.active {
