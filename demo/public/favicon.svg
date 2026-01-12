@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316"/>
+      <stop offset="33%" style="stop-color:#fb7185"/>
+      <stop offset="66%" style="stop-color:#0ea5a4"/>
+      <stop offset="100%" style="stop-color:#f97316"/>
+    </linearGradient>
+  </defs>
+  <rect width="44" height="44" rx="12" ry="12" fill="url(#grad)"/>
+  <text x="22" y="28" text-anchor="middle" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="700">CF</text>
+</svg>

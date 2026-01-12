@@ -58,10 +58,19 @@ class GeminiVertexAdapter:
         return result, text
 
     def infer_categories_batch(
-        self, transactions: list[dict[str, Any]], categories: list[str]
+        self, transactions: list[dict[str, Any]], categories: list[dict[str, Any]]
     ) -> tuple[list[dict[str, Any]], str]:
+        """Infer categories for a batch of transactions.
+
+        Args:
+            transactions: List of transaction dictionaries
+            categories: List of category dicts with 'name' and 'keywords' fields
+        """
         prompt = build_category_prompt(transactions, categories)
         logger.debug(f"Inferring categories for batch of {len(transactions)} transactions")
+
+        with open("/Users/dabsdamoon/projects/project-catefolio/tmp/prompt.txt", "w") as f:
+            f.write(prompt)
 
         text = self._call_model(prompt, operation="infer_categories_batch")
         results = self._parse_categories(text)

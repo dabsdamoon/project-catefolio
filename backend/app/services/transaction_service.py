@@ -95,7 +95,7 @@ class TransactionService:
             "transactions": transactions,
             "charts": charts,
             "rules": rules,
-            "categories": self.categories,
+            "categories": [cat["name"] for cat in self.categories],
             "categorized": categorize and bool(self.categories),
             "narrative": self._build_narrative(summary),
         }
@@ -392,7 +392,12 @@ class TransactionService:
                 transactions[index]["entity"] = categories[0]
 
     @staticmethod
-    def _load_categories() -> list[str]:
+    def _load_categories() -> list[dict[str, Any]]:
+        """Load categories with keywords from JSON file.
+
+        Returns:
+            List of category dicts with 'name' and 'keywords' fields
+        """
         base_dir = Path(__file__).resolve().parents[3]
         default_path = base_dir / "test_expense_categories" / "expense_category.json"
         path = Path(os.getenv("CATEGORY_PATH", str(default_path)))
@@ -407,12 +412,33 @@ class TransactionService:
             logger.warning(f"Failed to parse category file: {e}")
             return []
 
+        categories: list[dict[str, Any]] = []
         if isinstance(data, dict):
-            categories = [str(value).strip() for value in data.values() if str(value).strip()]
+            for value in data.values():
+                if isinstance(value, dict):
+                    name = str(value.get("name", "")).strip()
+                    keywords = value.get("keywords", [])
+                    if not isinstance(keywords, list):
+                        keywords = []
+                    if name:
+                        categories.append({"name": name, "keywords": keywords})
+                else:
+                    name = str(value).strip()
+                    if name:
+                        categories.append({"name": name, "keywords": []})
         elif isinstance(data, list):
-            categories = [str(value).strip() for value in data if str(value).strip()]
-        else:
-            categories = []
+            for value in data:
+                if isinstance(value, dict):
+                    name = str(value.get("name", "")).strip()
+                    keywords = value.get("keywords", [])
+                    if not isinstance(keywords, list):
+                        keywords = []
+                    if name:
+                        categories.append({"name": name, "keywords": keywords})
+                else:
+                    name = str(value).strip()
+                    if name:
+                        categories.append({"name": name, "keywords": []})
 
         logger.debug(f"Loaded {len(categories)} categories from {path}")
         return categories

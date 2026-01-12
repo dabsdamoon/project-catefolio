@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timezone
 from io import BytesIO
 from pathlib import Path
@@ -8,6 +9,7 @@ from fastapi.responses import StreamingResponse
 
 from app.repositories.local_repo import LocalRepository
 from app.schemas.models import (
+    CategoryItem,
     EntityCreate,
     EntityResponse,
     GraphInferenceResponse,
@@ -24,6 +26,7 @@ router = APIRouter()
 _repo = LocalRepository()
 _service = TransactionService(_repo)
 _template_service = TemplateService(Path(__file__).resolve().parents[3] / "test_template" / "계좌관리_template.xlsx")
+_categories_path = Path(__file__).resolve().parents[3] / "test_expense_categories" / "expense_category.json"
 
 
 @router.get("/health")
@@ -142,3 +145,29 @@ async def convert_template(
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
+
+
+@router.get("/categories", response_model=list[CategoryItem])
+def get_categories() -> list[CategoryItem]:
+    """Get all expense categories with their keywords."""
+    if not _categories_path.exists():
+        return []
+    with open(_categories_path, encoding="utf-8") as f:
+        data = json.load(f)
+    return [
+        CategoryItem(id=cat_id, name=cat["name"], keywords=cat.get("keywords", []))
+        for cat_id, cat in data.items()
+    ]
+
+
+@router.put("/categories", response_model=list[CategoryItem])
+def update_categories(categories: list[CategoryItem]) -> list[CategoryItem]:
+    """Update expense categories with their keywords."""
+    data = {
+        cat.id: {"name": cat.name, "keywords": cat.keywords}
+        for cat in categories
+    }
+    _categories_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(_categories_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    return categories

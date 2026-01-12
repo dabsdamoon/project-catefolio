@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import './App.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000'
@@ -21,6 +21,14 @@ type Transaction = {
 
 type UploadState = 'idle' | 'uploading' | 'processing' | 'success' | 'error'
 
+type Category = {
+  id: string
+  name: string
+  keywords: string[]
+}
+
+type NavView = 'workspace' | 'categories' | 'insights' | 'exports'
+
 function Spinner() {
   return (
     <div className="spinner" aria-label="Loading">
@@ -41,8 +49,80 @@ function App() {
   const [categorize, setCategorize] = useState(false)
   const [wasCategorized, setWasCategorized] = useState(false)
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
+  const [activeView, setActiveView] = useState<NavView>('workspace')
+  const [expenseCategories, setExpenseCategories] = useState<Category[]>([])
+  const [keywordInputs, setKeywordInputs] = useState<Record<string, string>>({})
+  const [categoriesLoading, setCategoriesLoading] = useState(false)
+  const [categoriesSaving, setCategoriesSaving] = useState(false)
+  const [categoriesMessage, setCategoriesMessage] = useState('')
 
   const isUploading = uploadState === 'uploading' || uploadState === 'processing'
+
+  useEffect(() => {
+    if (activeView === 'categories') {
+      loadCategories()
+    }
+  }, [activeView])
+
+  const loadCategories = async () => {
+    setCategoriesLoading(true)
+    setCategoriesMessage('')
+    try {
+      const response = await fetch(`${API_BASE}/categories`)
+      if (response.ok) {
+        const data: Category[] = await response.json()
+        setExpenseCategories(data)
+        const inputs: Record<string, string> = {}
+        data.forEach((cat) => {
+          inputs[cat.id] = cat.keywords.join(', ')
+        })
+        setKeywordInputs(inputs)
+      }
+    } catch {
+      setCategoriesMessage('Failed to load categories')
+    } finally {
+      setCategoriesLoading(false)
+    }
+  }
+
+  const saveCategories = async () => {
+    setCategoriesSaving(true)
+    setCategoriesMessage('')
+    try {
+      const categoriesToSave = expenseCategories.map((cat) => ({
+        ...cat,
+        keywords: (keywordInputs[cat.id] || '')
+          .split(',')
+          .map((k) => k.trim())
+          .filter(Boolean),
+      }))
+      const response = await fetch(`${API_BASE}/categories`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(categoriesToSave),
+      })
+      if (response.ok) {
+        setExpenseCategories(categoriesToSave)
+        setCategoriesMessage('Categories saved successfully')
+      } else {
+        setCategoriesMessage('Failed to save categories')
+      }
+    } catch {
+      setCategoriesMessage('Failed to save categories')
+    } finally {
+      setCategoriesSaving(false)
+    }
+  }
+
+  const updateCategoryName = (id: string, name: string) => {
+    setExpenseCategories((prev) =>
+      prev.map((cat) => (cat.id === id ? { ...cat, name } : cat))
+    )
+  }
+
+  const updateKeywordInput = (id: string, value: string) => {
+    setKeywordInputs((prev) => ({ ...prev, [id]: value }))
+  }
 
   const grouped = useMemo(() => {
     const bucket: Record<string, { credit: Transaction[]; debit: Transaction[] }> = {}
@@ -248,47 +328,133 @@ function App() {
           </div>
         </div>
         <div className="nav-group">
-          <div className="nav-item active">Workspace</div>
-          <div className="nav-item">Entities</div>
-          <div className="nav-item">Categories</div>
-          <div className="nav-item">Insights</div>
-          <div className="nav-item">Exports</div>
+          <div
+            className={`nav-item ${activeView === 'workspace' ? 'active' : ''}`}
+            onClick={() => setActiveView('workspace')}
+          >
+            Workspace
+          </div>
+          <div
+            className={`nav-item ${activeView === 'categories' ? 'active' : ''}`}
+            onClick={() => setActiveView('categories')}
+          >
+            Set Transaction Categories
+          </div>
+          <div
+            className={`nav-item ${activeView === 'insights' ? 'active' : ''}`}
+            onClick={() => setActiveView('insights')}
+          >
+            Insights
+          </div>
+          <div
+            className={`nav-item ${activeView === 'exports' ? 'active' : ''}`}
+            onClick={() => setActiveView('exports')}
+          >
+            Exports
+          </div>
         </div>
       </aside>
 
       <main className="main">
-        <header className="header">
-          <div className="workspace-title">
-            <h2>Template Conversion</h2>
-            <p>Upload statements, then preview credit/debit tables in template format.</p>
-          </div>
-          <div className="header-actions">
-            <button className="btn ghost" onClick={handleDownload} disabled={!templateBlob}>
-              Download Excel
-            </button>
-            <label className={`btn primary ${isUploading ? 'uploading' : ''}`}>
-              {isUploading ? (
-                <>
-                  <Spinner />
-                  <span>Processing...</span>
-                </>
-              ) : (
-                'Upload Files'
+        {activeView === 'categories' && (
+          <>
+            <header className="header">
+              <div className="workspace-title">
+                <h2>Set Transaction Categories</h2>
+                <p>Define category names and keywords for AI-powered transaction categorization.</p>
+              </div>
+              <div className="header-actions">
+                <button
+                  className="btn primary"
+                  onClick={saveCategories}
+                  disabled={categoriesSaving}
+                >
+                  {categoriesSaving ? 'Saving...' : 'Save Categories'}
+                </button>
+              </div>
+            </header>
+
+            <section className="card">
+              <div className="section-title">
+                <h3>Expense Categories</h3>
+                <span>Add keywords to help AI match transactions to categories</span>
+              </div>
+
+              {categoriesMessage && (
+                <div className={`status-container ${categoriesMessage.includes('success') ? 'success' : 'error'}`}>
+                  <span className={`status-icon ${categoriesMessage.includes('success') ? 'success' : 'error'}`}>
+                    {categoriesMessage.includes('success') ? '✓' : '✕'}
+                  </span>
+                  <p className="status">{categoriesMessage}</p>
+                </div>
               )}
-              <input
-                type="file"
-                multiple
-                accept=".csv,.xls,.xlsx"
-                onChange={(event) => {
-                  handleUpload(Array.from(event.target.files || []))
-                  event.target.value = '' // Reset to allow re-uploading same file
-                }}
-                disabled={isUploading}
-                hidden
-              />
-            </label>
-          </div>
-        </header>
+
+              {categoriesLoading ? (
+                <div className="table-empty">Loading categories...</div>
+              ) : (
+                <div className="categories-list">
+                  {expenseCategories.map((cat) => (
+                    <div key={cat.id} className="category-row">
+                      <div className="category-field">
+                        <label>Category Name</label>
+                        <input
+                          type="text"
+                          value={cat.name}
+                          onChange={(e) => updateCategoryName(cat.id, e.target.value)}
+                          placeholder="Category name"
+                        />
+                      </div>
+                      <div className="category-field keywords">
+                        <label>Keywords (comma-separated)</label>
+                        <input
+                          type="text"
+                          value={keywordInputs[cat.id] ?? cat.keywords.join(', ')}
+                          onChange={(e) => updateKeywordInput(cat.id, e.target.value)}
+                          placeholder="e.g., salary, payroll, bonus"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          </>
+        )}
+
+        {activeView === 'workspace' && (
+          <>
+            <header className="header">
+              <div className="workspace-title">
+                <h2>Template Conversion</h2>
+                <p>Upload statements, then preview credit/debit tables in template format.</p>
+              </div>
+              <div className="header-actions">
+                <button className="btn ghost" onClick={handleDownload} disabled={!templateBlob}>
+                  Download Excel
+                </button>
+                <label className={`btn primary ${isUploading ? 'uploading' : ''}`}>
+                  {isUploading ? (
+                    <>
+                      <Spinner />
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    'Upload Files'
+                  )}
+                  <input
+                    type="file"
+                    multiple
+                    accept=".csv,.xls,.xlsx"
+                    onChange={(event) => {
+                      handleUpload(Array.from(event.target.files || []))
+                      event.target.value = '' // Reset to allow re-uploading same file
+                    }}
+                    disabled={isUploading}
+                    hidden
+                  />
+                </label>
+              </div>
+            </header>
 
         {/* Upload Progress Overlay */}
         {isUploading && (
@@ -450,6 +616,28 @@ function App() {
             <div className="template-scroll">{renderTable(debitEntries, 'debit')}</div>
           </div>
         </section>
+          </>
+        )}
+
+        {activeView === 'insights' && (
+          <section className="card">
+            <div className="section-title">
+              <h3>Insights</h3>
+              <span>Coming soon</span>
+            </div>
+            <div className="table-empty">Insights feature is under development.</div>
+          </section>
+        )}
+
+        {activeView === 'exports' && (
+          <section className="card">
+            <div className="section-title">
+              <h3>Exports</h3>
+              <span>Coming soon</span>
+            </div>
+            <div className="table-empty">Exports feature is under development.</div>
+          </section>
+        )}
       </main>
     </div>
   )

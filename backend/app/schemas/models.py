@@ -57,3 +57,9 @@ class GraphInferenceResponse(BaseModel):
     entities: list[dict[str, Any]]
     relationships: list[dict[str, Any]]
     raw_text: str | None = None
+
+
+class CategoryItem(BaseModel):
+    id: str
+    name: str
+    keywords: list[str] = []

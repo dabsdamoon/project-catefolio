@@ -56,9 +56,16 @@ class InferenceService:
     def infer_categories(
         self,
         transactions: list[dict[str, Any]],
-        categories: list[str],
+        categories: list[dict[str, Any]],
         batch_size: int = 100,
     ) -> tuple[list[dict[str, Any]], list[str]]:
+        """Infer categories for transactions.
+
+        Args:
+            transactions: List of transaction dictionaries
+            categories: List of category dicts with 'name' and 'keywords' fields
+            batch_size: Number of transactions per batch
+        """
         logger.info(f"Inferring categories for {len(transactions)} transactions in batches of {batch_size}")
         results: list[dict[str, Any]] = []
         raw_texts: list[str] = []
