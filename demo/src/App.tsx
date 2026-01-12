@@ -1,7 +1,45 @@
-import { Fragment, useEffect, useMemo, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000'
+
+// Parse TSV (tab-separated) with columns as categories and rows as keywords
+// Format: First row = category names, following rows = keywords
+// Using TSV because category names/keywords may contain commas
+type CategoryKeywordsMap = Record<string, string[]>
+
+const parseCategoryTSV = async (file: File): Promise<CategoryKeywordsMap> => {
+  const text = await file.text()
+  const lines = text.split(/[\r\n]+/).filter(line => line.trim())
+
+  if (lines.length < 1) {
+    throw new Error('TSV file is empty')
+  }
+
+  // Parse header row to get category names (tab-separated)
+  const headers = lines[0].split('\t').map(h => h.trim())
+
+  // Initialize result map
+  const result: CategoryKeywordsMap = {}
+  headers.forEach(header => {
+    if (header) {
+      result[header] = []
+    }
+  })
+
+  // Parse data rows (tab-separated)
+  for (let i = 1; i < lines.length; i++) {
+    const values = lines[i].split('\t').map(v => v.trim())
+    values.forEach((value, colIndex) => {
+      const categoryName = headers[colIndex]
+      if (categoryName && value && !result[categoryName].includes(value)) {
+        result[categoryName].push(value)
+      }
+    })
+  }
+
+  return result
+}
 const DATES_PER_PAGE = 6
 
 // Demo mode: Generate or retrieve a unique session ID
@@ -70,11 +108,21 @@ function App() {
   const [wasCategorized, setWasCategorized] = useState(false)
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
   const [activeView, setActiveView] = useState<NavView>('workspace')
+  const [duplicateFound, setDuplicateFound] = useState<{
+    jobId: string
+    files: File[]
+    transactionCount: number
+    wasCategorized: boolean
+  } | null>(null)
   const [expenseCategories, setExpenseCategories] = useState<Category[]>([])
   const [keywordInputs, setKeywordInputs] = useState<Record<string, string>>({})
+  const [keywordArrays, setKeywordArrays] = useState<Record<string, string[]>>({})
   const [categoriesLoading, setCategoriesLoading] = useState(false)
   const [categoriesSaving, setCategoriesSaving] = useState(false)
   const [categoriesMessage, setCategoriesMessage] = useState('')
+  const [csvImportPreview, setCsvImportPreview] = useState<CategoryKeywordsMap | null>(null)
+  const [csvImportMatches, setCsvImportMatches] = useState<Record<string, string>>({})
+  const csvFileInputRef = useRef<HTMLInputElement | null>(null)
 
   const isUploading = uploadState === 'uploading' || uploadState === 'processing'
 
@@ -93,10 +141,13 @@ function App() {
         const data: Category[] = await response.json()
         setExpenseCategories(data)
         const inputs: Record<string, string> = {}
+        const arrays: Record<string, string[]> = {}
         data.forEach((cat) => {
-          inputs[cat.id] = cat.keywords.join(', ')
+          inputs[cat.id] = ''
+          arrays[cat.id] = cat.keywords || []
         })
         setKeywordInputs(inputs)
+        setKeywordArrays(arrays)
       }
     } catch {
       setCategoriesMessage('Failed to load categories')
@@ -111,10 +162,7 @@ function App() {
     try {
       const categoriesToSave = expenseCategories.map((cat) => ({
         ...cat,
-        keywords: (keywordInputs[cat.id] || '')
-          .split(',')
-          .map((k) => k.trim())
-          .filter(Boolean),
+        keywords: keywordArrays[cat.id] || [],
       }))
       const response = await apiFetch(`${API_BASE}/categories`, {
         method: 'PUT',
@@ -142,6 +190,124 @@ function App() {
 
   const updateKeywordInput = (id: string, value: string) => {
     setKeywordInputs((prev) => ({ ...prev, [id]: value }))
+  }
+
+  const addKeyword = useCallback((categoryId: string, keyword: string) => {
+    const trimmed = keyword.trim()
+    if (!trimmed) return
+
+    setKeywordArrays((prev) => {
+      const existing = prev[categoryId] || []
+      if (existing.includes(trimmed)) return prev
+      return { ...prev, [categoryId]: [...existing, trimmed] }
+    })
+  }, [])
+
+  const removeKeyword = useCallback((categoryId: string, keyword: string) => {
+    setKeywordArrays((prev) => ({
+      ...prev,
+      [categoryId]: (prev[categoryId] || []).filter((k) => k !== keyword),
+    }))
+  }, [])
+
+  const handleKeywordInputKeyDown = (categoryId: string, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault()
+      const input = keywordInputs[categoryId] || ''
+      addKeyword(categoryId, input)
+      setKeywordInputs((prev) => ({ ...prev, [categoryId]: '' }))
+    }
+  }
+
+  const clearAllKeywords = (categoryId: string) => {
+    setKeywordArrays((prev) => ({ ...prev, [categoryId]: [] }))
+  }
+
+  // TSV Import handlers
+  const handleTsvFileSelect = async (file: File) => {
+    try {
+      const parsed = await parseCategoryTSV(file)
+      setCsvImportPreview(parsed)
+
+      // Auto-match CSV columns to existing categories by name
+      const matches: Record<string, string> = {}
+      Object.keys(parsed).forEach(csvCategory => {
+        const match = expenseCategories.find(
+          cat => cat.name.toLowerCase() === csvCategory.toLowerCase()
+        )
+        if (match) {
+          matches[csvCategory] = match.id
+        }
+      })
+      setCsvImportMatches(matches)
+    } catch (error) {
+      setCategoriesMessage('Failed to parse CSV file. Please check the format.')
+    }
+  }
+
+  const handleCsvMatchChange = (csvCategory: string, categoryId: string) => {
+    setCsvImportMatches(prev => ({ ...prev, [csvCategory]: categoryId }))
+  }
+
+  const applyCSVImport = () => {
+    if (!csvImportPreview) return
+
+    const newKeywordArrays = { ...keywordArrays }
+    let totalAdded = 0
+
+    Object.entries(csvImportMatches).forEach(([csvCategory, categoryId]) => {
+      if (categoryId && csvImportPreview[csvCategory]) {
+        const existing = newKeywordArrays[categoryId] || []
+        const newKeywords = csvImportPreview[csvCategory].filter(k => !existing.includes(k))
+        newKeywordArrays[categoryId] = [...existing, ...newKeywords]
+        totalAdded += newKeywords.length
+      }
+    })
+
+    setKeywordArrays(newKeywordArrays)
+    setCsvImportPreview(null)
+    setCsvImportMatches({})
+    setCategoriesMessage(`Successfully imported ${totalAdded} keywords`)
+  }
+
+  const cancelCSVImport = () => {
+    setCsvImportPreview(null)
+    setCsvImportMatches({})
+  }
+
+  const downloadKeywordTemplate = () => {
+    // Get all category names and their keywords
+    const categories = expenseCategories.map(cat => ({
+      name: cat.name,
+      keywords: keywordArrays[cat.id] || []
+    }))
+
+    // Find max keyword count to determine number of rows
+    const maxKeywords = Math.max(...categories.map(c => c.keywords.length), 1)
+
+    // Build TSV content (tab-separated to allow commas in values)
+    const rows: string[] = []
+
+    // Header row (category names, tab-separated)
+    rows.push(categories.map(c => c.name).join('\t'))
+
+    // Data rows (keywords, tab-separated)
+    for (let i = 0; i < maxKeywords; i++) {
+      const row = categories.map(c => c.keywords[i] || '')
+      rows.push(row.join('\t'))
+    }
+
+    // Create and download file
+    const tsvContent = rows.join('\n')
+    const blob = new Blob([tsvContent], { type: 'text/tab-separated-values;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'keyword_template.tsv'
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
   }
 
   const grouped = useMemo(() => {
@@ -181,7 +347,7 @@ function App() {
   const formatCurrency = (value?: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value || 0)
 
-  const handleUpload = async (files: File[]) => {
+  const handleUpload = async (files: File[], forceReprocess = false) => {
     if (!files.length) return
 
     // Reset state
@@ -189,6 +355,9 @@ function App() {
     setErrorMessage('')
     setTemplateBlob(null)
     setSelectedTransaction(null)
+    if (!forceReprocess) {
+      setDuplicateFound(null)
+    }
 
     const fileNames = files.map((file) => file.name).join(', ')
     setUploadProgress(`Uploading ${files.length} file(s): ${fileNames}`)
@@ -197,7 +366,7 @@ function App() {
     try {
       // Step 1: Upload files
       setUploadProgress('Uploading files to server...')
-      const uploadUrl = `${API_BASE}/upload?categorize=${categorize}`
+      const uploadUrl = `${API_BASE}/upload?categorize=${categorize}&force_reprocess=${forceReprocess}`
       const uploadResponse = await apiFetch(uploadUrl, {
         method: 'POST',
         body: buildFormData(files),
@@ -209,6 +378,21 @@ function App() {
       }
 
       const uploadData = await uploadResponse.json()
+      const isDuplicate = uploadData.is_duplicate
+
+      // If duplicate found and not forcing reprocess, show modal to ask user
+      if (isDuplicate && !forceReprocess) {
+        setDuplicateFound({
+          jobId: uploadData.job_id,
+          files: files,
+          transactionCount: uploadData.files_received,
+          wasCategorized: uploadData.was_categorized,
+        })
+        setUploadState('idle')
+        setUploadProgress('')
+        setStatus('Duplicate transactions detected.')
+        return
+      }
 
       // Step 2: Process results
       setUploadState('processing')
@@ -223,12 +407,12 @@ function App() {
       const resultData = await resultResponse.json()
       setSummary(resultData.summary)
       setTransactions(resultData.transactions)
-      setWasCategorized(resultData.categorized || false)
+      setWasCategorized(uploadData.was_categorized || resultData.categorized || false)
       setPage(0)
 
       // Step 3: Generate template
       setUploadProgress('Generating Excel template...')
-      const templateUrl = `${API_BASE}/template/convert?categorize=${categorize}`
+      const templateUrl = `${API_BASE}/template/convert?categorize=${categorize}&force_reprocess=${forceReprocess}`
       const templateResponse = await apiFetch(templateUrl, {
         method: 'POST',
         body: buildFormData(files),
@@ -241,11 +425,14 @@ function App() {
       const blob = await templateResponse.blob()
       setTemplateBlob(blob)
 
-      // Success
+      // Success message
       setUploadState('success')
       setUploadProgress('')
+      setDuplicateFound(null)
+
       const catMsg = categorize ? ' with AI categorization' : ''
-      setStatus(`Successfully processed ${resultData.transactions.length} transactions${catMsg}. Template ready for download.`)
+      const reprocessMsg = forceReprocess ? ' (re-processed)' : ''
+      setStatus(`Successfully processed ${resultData.transactions.length} transactions${catMsg}${reprocessMsg}. Template ready for download.`)
 
     } catch (error) {
       setUploadState('error')
@@ -254,6 +441,62 @@ function App() {
       setStatus('Upload failed. Please check the error message below.')
       setUploadProgress('')
     }
+  }
+
+  const handleUsePreviousResult = async () => {
+    if (!duplicateFound) return
+
+    setUploadState('processing')
+    setUploadProgress('Loading existing results...')
+
+    try {
+      const resultResponse = await apiFetch(`${API_BASE}/result/${duplicateFound.jobId}`)
+      if (!resultResponse.ok) {
+        throw new Error(`Failed to fetch results (${resultResponse.status})`)
+      }
+
+      const resultData = await resultResponse.json()
+      setSummary(resultData.summary)
+      setTransactions(resultData.transactions)
+      setWasCategorized(duplicateFound.wasCategorized)
+      setPage(0)
+
+      // Generate template from existing data
+      setUploadProgress('Generating Excel template...')
+      const templateUrl = `${API_BASE}/template/convert?categorize=false`
+      const templateResponse = await apiFetch(templateUrl, {
+        method: 'POST',
+        body: buildFormData(duplicateFound.files),
+      })
+
+      if (templateResponse.ok) {
+        const blob = await templateResponse.blob()
+        setTemplateBlob(blob)
+      }
+
+      setUploadState('success')
+      setUploadProgress('')
+      setDuplicateFound(null)
+
+      const catMsg = duplicateFound.wasCategorized ? ' (previously categorized)' : ''
+      setStatus(`Loaded ${resultData.transactions.length} transactions from existing data${catMsg}. Template ready for download.`)
+    } catch (error) {
+      setUploadState('error')
+      const message = error instanceof Error ? error.message : 'An unexpected error occurred'
+      setErrorMessage(message)
+      setStatus('Failed to load previous results.')
+      setUploadProgress('')
+    }
+  }
+
+  const handleOverwriteAndReprocess = () => {
+    if (!duplicateFound) return
+    handleUpload(duplicateFound.files, true)
+  }
+
+  const handleCancelDuplicate = () => {
+    setDuplicateFound(null)
+    setStatus('Upload cancelled.')
   }
 
   const handleDownload = () => {
@@ -383,61 +626,189 @@ function App() {
                 <h2>Set Transaction Categories</h2>
                 <p>Define category names and keywords for AI-powered transaction categorization.</p>
               </div>
-              <div className="header-actions">
-                <button
-                  className="btn primary"
-                  onClick={saveCategories}
-                  disabled={categoriesSaving}
-                >
-                  {categoriesSaving ? 'Saving...' : 'Save Categories'}
-                </button>
-              </div>
             </header>
 
             <section className="card">
               <div className="section-title">
                 <h3>Expense Categories</h3>
-                <span>Add keywords to help AI match transactions to categories</span>
+                <span>Type keywords manually or use the buttons below to import/export</span>
               </div>
-
-              {categoriesMessage && (
-                <div className={`status-container ${categoriesMessage.includes('success') ? 'success' : 'error'}`}>
-                  <span className={`status-icon ${categoriesMessage.includes('success') ? 'success' : 'error'}`}>
-                    {categoriesMessage.includes('success') ? '✓' : '✕'}
-                  </span>
-                  <p className="status">{categoriesMessage}</p>
-                </div>
-              )}
 
               {categoriesLoading ? (
                 <div className="table-empty">Loading categories...</div>
               ) : (
                 <div className="categories-list">
                   {expenseCategories.map((cat) => (
-                    <div key={cat.id} className="category-row">
-                      <div className="category-field">
-                        <label>Category Name</label>
-                        <input
-                          type="text"
-                          value={cat.name}
-                          onChange={(e) => updateCategoryName(cat.id, e.target.value)}
-                          placeholder="Category name"
-                        />
+                    <div key={cat.id} className="category-row-enhanced">
+                      <div className="category-header-row">
+                        <div className="category-field name-field">
+                          <label>Category Name</label>
+                          <input
+                            type="text"
+                            value={cat.name}
+                            onChange={(e) => updateCategoryName(cat.id, e.target.value)}
+                            placeholder="Category name"
+                          />
+                        </div>
+                        {(keywordArrays[cat.id]?.length || 0) > 0 && (
+                          <button
+                            className="btn-clear-keywords"
+                            onClick={() => clearAllKeywords(cat.id)}
+                            title="Clear all keywords"
+                          >
+                            Clear All
+                          </button>
+                        )}
                       </div>
-                      <div className="category-field keywords">
-                        <label>Keywords (comma-separated)</label>
-                        <input
-                          type="text"
-                          value={keywordInputs[cat.id] ?? cat.keywords.join(', ')}
-                          onChange={(e) => updateKeywordInput(cat.id, e.target.value)}
-                          placeholder="e.g., salary, payroll, bonus"
-                        />
+
+                      <div className="keywords-container">
+                        <div className="keywords-tags-area">
+                          {(keywordArrays[cat.id] || []).map((keyword, idx) => (
+                            <span key={`${cat.id}-${keyword}-${idx}`} className="keyword-tag">
+                              {keyword}
+                              <button
+                                className="keyword-tag-remove"
+                                onClick={() => removeKeyword(cat.id, keyword)}
+                                aria-label={`Remove ${keyword}`}
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))}
+                          <input
+                            type="text"
+                            className="keyword-inline-input"
+                            value={keywordInputs[cat.id] || ''}
+                            onChange={(e) => updateKeywordInput(cat.id, e.target.value)}
+                            onKeyDown={(e) => handleKeywordInputKeyDown(cat.id, e)}
+                            placeholder={
+                              (keywordArrays[cat.id]?.length || 0) === 0
+                                ? 'Type keyword and press Enter...'
+                                : 'Add more...'
+                            }
+                          />
+                        </div>
+                        {(keywordArrays[cat.id]?.length || 0) > 0 && (
+                          <div className="keywords-count">
+                            {keywordArrays[cat.id].length} keyword{keywordArrays[cat.id].length !== 1 ? 's' : ''}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
                 </div>
               )}
             </section>
+
+            {/* CSV Import Preview Modal */}
+            {csvImportPreview && (
+              <div className="upload-overlay" onClick={cancelCSVImport}>
+                <div className="csv-import-modal" onClick={(e) => e.stopPropagation()}>
+                  <button className="modal-close" onClick={cancelCSVImport}>×</button>
+                  <h3>Import Keywords from TSV</h3>
+                  <p className="csv-import-desc">
+                    Map TSV columns to your categories. Unmatched columns will be skipped.
+                  </p>
+
+                  <div className="csv-import-mappings">
+                    {Object.entries(csvImportPreview).map(([csvCategory, keywords]) => (
+                      <div key={csvCategory} className="csv-mapping-row">
+                        <div className="csv-mapping-source">
+                          <span className="csv-column-name">{csvCategory}</span>
+                          <span className="csv-keyword-count">{keywords.length} keywords</span>
+                          <div className="csv-keyword-preview">
+                            {keywords.slice(0, 3).join(', ')}
+                            {keywords.length > 3 && ` +${keywords.length - 3} more`}
+                          </div>
+                        </div>
+                        <div className="csv-mapping-arrow">→</div>
+                        <select
+                          className="csv-mapping-select"
+                          value={csvImportMatches[csvCategory] || ''}
+                          onChange={(e) => handleCsvMatchChange(csvCategory, e.target.value)}
+                        >
+                          <option value="">Skip this column</option>
+                          {expenseCategories.map((cat) => (
+                            <option key={cat.id} value={cat.id}>
+                              {cat.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="csv-import-actions">
+                    <button className="btn ghost" onClick={cancelCSVImport}>
+                      Cancel
+                    </button>
+                    <button
+                      className="btn primary"
+                      onClick={applyCSVImport}
+                      disabled={Object.values(csvImportMatches).filter(Boolean).length === 0}
+                    >
+                      Import {Object.values(csvImportMatches).filter(Boolean).length} Categories
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Sticky Save Footer */}
+            <div className="sticky-save-footer">
+              <div className="sticky-save-content">
+                <div className="sticky-footer-left">
+                  <button className="btn ghost" onClick={downloadKeywordTemplate}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="7 10 12 15 17 10"/>
+                      <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Download Template
+                  </button>
+                  <label className="btn ghost">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="17 8 12 3 7 8"/>
+                      <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    Import TSV
+                    <input
+                      type="file"
+                      accept=".tsv,.txt"
+                      ref={csvFileInputRef}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) handleTsvFileSelect(file)
+                        e.target.value = ''
+                      }}
+                      hidden
+                    />
+                  </label>
+                </div>
+                <div className="sticky-footer-right">
+                  {categoriesMessage && (
+                    <span className={`sticky-save-message ${categoriesMessage.includes('success') ? 'success' : 'error'}`}>
+                      {categoriesMessage.includes('success') ? '✓' : '✕'} {categoriesMessage}
+                    </span>
+                  )}
+                  <button
+                    className="btn primary"
+                    onClick={saveCategories}
+                    disabled={categoriesSaving}
+                  >
+                    {categoriesSaving ? (
+                      <>
+                        <Spinner />
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      'Save Categories'
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
           </>
         )}
 
@@ -494,6 +865,44 @@ function App() {
                   ? 'AI categorization enabled - this may take longer...'
                   : 'This may take a moment for large files...'}
               </p>
+            </div>
+          </div>
+        )}
+
+        {/* Duplicate Found Modal */}
+        {duplicateFound && (
+          <div className="upload-overlay">
+            <div className="duplicate-modal">
+              <div className="duplicate-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+              </div>
+              <h3>Duplicate Transactions Found</h3>
+              <p className="duplicate-desc">
+                These transactions have already been processed.
+                {duplicateFound.wasCategorized && ' AI categorization was previously applied.'}
+              </p>
+              <div className="duplicate-info">
+                <div className="duplicate-stat">
+                  <span className="duplicate-stat-value">{duplicateFound.wasCategorized ? 'Yes' : 'No'}</span>
+                  <span className="duplicate-stat-label">AI Categorized</span>
+                </div>
+              </div>
+              <p className="duplicate-question">What would you like to do?</p>
+              <div className="duplicate-actions">
+                <button className="btn ghost" onClick={handleCancelDuplicate}>
+                  Cancel
+                </button>
+                <button className="btn ghost" onClick={handleUsePreviousResult}>
+                  Use Existing Data
+                </button>
+                <button className="btn primary" onClick={handleOverwriteAndReprocess}>
+                  Overwrite & Re-process
+                </button>
+              </div>
             </div>
           </div>
         )}

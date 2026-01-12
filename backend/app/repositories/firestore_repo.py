@@ -162,6 +162,35 @@ class FirestoreRepository:
         )
         return [doc.to_dict() | {"id": doc.id} for doc in query.stream()]
 
+    def find_job_by_signature(
+        self,
+        content_signature: str,
+        user_id: str,
+    ) -> dict[str, Any] | None:
+        """
+        Find an existing job by content signature for a user.
+
+        Args:
+            content_signature: Hash of transaction content
+            user_id: User's unique identifier
+
+        Returns:
+            Job data with id, or None if not found
+        """
+        query = (
+            self.db.collection(self.jobs_collection)
+            .where(filter=FieldFilter("user_id", "==", user_id))
+            .where(filter=FieldFilter("content_signature", "==", content_signature))
+            .limit(1)
+        )
+        docs = list(query.stream())
+        if not docs:
+            return None
+        doc = docs[0]
+        data = doc.to_dict()
+        data["id"] = doc.id
+        return data
+
     def delete_job(self, job_id: str, user_id: Optional[str] = None) -> bool:
         """
         Delete a job document and its transactions sub-collection.
