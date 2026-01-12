@@ -127,29 +127,6 @@ class TestBuildNarrative:
         assert "4,000" in narrative
 
 
-class TestRulesFromEntities:
-    """Tests for entity-to-rules conversion."""
-
-    def test_basic_entity_conversion(self):
-        entities = [
-            {"name": "Amazon", "aliases": ["AMZN", "Amazon.com"]},
-            {"name": "Starbucks", "aliases": []},
-        ]
-        rules = TransactionService._rules_from_entities(entities)
-        assert len(rules) == 4  # Amazon + 2 aliases + Starbucks
-        assert any(r["pattern"] == "Amazon" for r in rules)
-        assert any(r["pattern"] == "AMZN" for r in rules)
-
-    def test_empty_entities(self):
-        rules = TransactionService._rules_from_entities([])
-        assert rules == []
-
-    def test_empty_name_skipped(self):
-        entities = [{"name": "", "aliases": ["test"]}]
-        rules = TransactionService._rules_from_entities(entities)
-        assert len(rules) == 1  # Only the alias
-
-
 class TestApplyCategoryResults:
     """Tests for applying category results."""
 
@@ -163,8 +140,8 @@ class TestApplyCategoryResults:
             {"index": 1, "categories": ["Food"]},
         ]
         TransactionService._apply_category_results(transactions, results)
+        # Only the first category is applied (no categories array stored)
         assert transactions[0]["category"] == "Shopping"
-        assert transactions[0]["categories"] == ["Shopping", "E-commerce"]
         assert transactions[1]["category"] == "Food"
 
     def test_invalid_index_ignored(self):

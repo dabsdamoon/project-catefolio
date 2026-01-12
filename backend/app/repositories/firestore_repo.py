@@ -162,6 +162,38 @@ class FirestoreRepository:
         )
         return [doc.to_dict() | {"id": doc.id} for doc in query.stream()]
 
+    def get_all_transaction_signatures(self, user_id: str) -> set[str]:
+        """
+        Get all transaction signatures for a user across all jobs.
+
+        Used for deduplication during upload.
+
+        Args:
+            user_id: User's unique identifier
+
+        Returns:
+            Set of transaction signatures (md5 hashes of date|description|amount)
+        """
+        import hashlib
+
+        signatures: set[str] = set()
+        jobs = self.list_jobs(user_id)
+
+        for job_meta in jobs:
+            job_id = job_meta.get("id")
+            if not job_id:
+                continue
+
+            job_ref = self.db.collection(self.jobs_collection).document(job_id)
+            transactions = self._load_transactions(job_ref)
+
+            for txn in transactions:
+                key = f"{txn.get('date', '')}|{txn.get('description', '')}|{txn.get('amount', 0)}"
+                sig = hashlib.md5(key.encode()).hexdigest()
+                signatures.add(sig)
+
+        return signatures
+
     def find_job_by_signature(
         self,
         content_signature: str,
