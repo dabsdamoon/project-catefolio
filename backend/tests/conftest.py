@@ -148,15 +148,6 @@ def mock_category_response() -> list[dict[str, Any]]:
 
 
 @pytest.fixture
-def mock_rules_response() -> list[dict[str, str]]:
-    """Mock LLM response for rules inference."""
-    return [
-        {"pattern": "Amazon", "match_field": "description", "entity": "Amazon", "category": "Shopping"},
-        {"pattern": "Starbucks", "match_field": "description", "entity": "Starbucks", "category": "Food & Dining"},
-    ]
-
-
-@pytest.fixture
 def mock_gemini_adapter():
     """Mock the GeminiVertexAdapter for testing without LLM calls."""
     with patch("app.adapters.gemini_vertex.GenerativeModel") as mock_model:
@@ -166,13 +157,11 @@ def mock_gemini_adapter():
 
 
 @pytest.fixture
-def mock_inference_service(mock_rules_response, mock_category_response):
+def mock_inference_service(mock_category_response):
     """Mock InferenceService for testing without LLM calls."""
     with patch("app.services.transaction_service.InferenceService") as mock_service:
         instance = MagicMock()
-        instance.build_rules.return_value = mock_rules_response
         instance.infer_categories.return_value = (mock_category_response, ["raw_text"])
-        instance.apply_rules.side_effect = lambda txns, rules: txns
         mock_service.return_value = instance
         yield instance
 

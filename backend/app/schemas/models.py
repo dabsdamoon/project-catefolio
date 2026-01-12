@@ -10,6 +10,7 @@ class UploadResponse(BaseModel):
     created_at: str
     is_duplicate: bool = False
     was_categorized: bool = False
+    duplicates_skipped: int = 0
 
 
 class ResultResponse(BaseModel):

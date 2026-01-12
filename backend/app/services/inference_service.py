@@ -19,27 +19,6 @@ class InferenceService:
         self.adapter = GeminiVertexAdapter(model_name)
         logger.info(f"InferenceService initialized with provider={provider}, model={model_name}")
 
-    def build_rules(
-        self,
-        transactions: list[dict[str, Any]],
-        user_rules: list[dict[str, str]] | None = None,
-    ) -> list[dict[str, str]]:
-        user_rules = user_rules or []
-        logger.info(f"Building rules for {len(transactions)} transactions, {len(user_rules)} user rules")
-
-        try:
-            llm_rules = self.adapter.infer_rules(transactions)
-        except LLMParseError as e:
-            logger.warning(f"Failed to parse LLM rules, using user rules only: {e}")
-            llm_rules = []
-        except LLMError as e:
-            logger.error(f"LLM error during rule inference: {e}")
-            raise
-
-        combined = self._deduplicate_rules(user_rules + llm_rules)
-        logger.info(f"Generated {len(combined)} total rules ({len(llm_rules)} from LLM)")
-        return combined
-
     def infer_graph(
         self, transaction: dict[str, Any], root_context: str | None = None
     ) -> tuple[dict[str, Any], str]:
@@ -105,61 +84,3 @@ class InferenceService:
         logger.info(f"Category inference complete: {len(results)} categorized, {len(failed_batches)} failed batches")
         return results, raw_texts
 
-    @staticmethod
-    def _deduplicate_rules(rules: list[dict[str, str]]) -> list[dict[str, str]]:
-        seen: set[tuple[str, str, str, str]] = set()
-        deduped: list[dict[str, str]] = []
-        for rule in rules:
-            key = (
-                rule.get("pattern", ""),
-                rule.get("match_field", ""),
-                rule.get("entity", ""),
-                rule.get("category", ""),
-            )
-            if key in seen:
-                continue
-            seen.add(key)
-            deduped.append(rule)
-        return deduped
-
-    @staticmethod
-    def apply_rules(
-        transactions: list[dict[str, Any]],
-        rules: list[dict[str, str]],
-    ) -> list[dict[str, Any]]:
-        logger.debug(f"Applying {len(rules)} rules to {len(transactions)} transactions")
-        matched_count = 0
-
-        for tx in transactions:
-            base_entity = "Credit" if tx.get("amount", 0) > 0 else "Debit"
-            matched = False
-            raw = tx.get("raw", {})
-            description = str(tx.get("description", "") or "")
-            note = str(raw.get("note", "") or "")
-            display = str(raw.get("display", "") or "")
-            memo = str(raw.get("memo", "") or "")
-            fields = {
-                "description": description,
-                "note": note,
-                "display": display,
-                "memo": memo,
-            }
-            for rule in rules:
-                pattern = rule.get("pattern", "")
-                match_field = rule.get("match_field", "description")
-                haystack = fields.get(match_field, "")
-                if pattern and pattern in haystack:
-                    if rule.get("category"):
-                        tx["category"] = rule["category"]
-                    if rule.get("entity"):
-                        tx["entity"] = rule["entity"]
-                    matched = True
-                    matched_count += 1
-                    break
-            if not matched:
-                tx["entity"] = tx.get("entity") or base_entity
-            elif not tx.get("entity"):
-                tx["entity"] = base_entity
-
-        logger.info(f"Applied rules: {matched_count}/{len(transactions)} transactions matched")
-        return transactions

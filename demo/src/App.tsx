@@ -1,5 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
+import InsightsDashboard from './InsightsDashboard'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000'
 
@@ -85,7 +86,7 @@ type Category = {
   keywords: string[]
 }
 
-type NavView = 'workspace' | 'categories' | 'insights' | 'exports'
+type NavView = 'dashboard' | 'upload' | 'categories' | 'exports'
 
 function Spinner() {
   return (
@@ -107,7 +108,9 @@ function App() {
   const [categorize, setCategorize] = useState(false)
   const [wasCategorized, setWasCategorized] = useState(false)
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
-  const [activeView, setActiveView] = useState<NavView>('workspace')
+  const [activeView, setActiveView] = useState<NavView>('dashboard')
+  const [dashboardTransactions, setDashboardTransactions] = useState<Transaction[]>([])
+  const [dashboardLoading, setDashboardLoading] = useState(false)
   const [duplicateFound, setDuplicateFound] = useState<{
     jobId: string
     files: File[]
@@ -126,7 +129,46 @@ function App() {
 
   const isUploading = uploadState === 'uploading' || uploadState === 'processing'
 
+  const loadDashboardTransactions = async () => {
+    setDashboardLoading(true)
+    try {
+      const response = await apiFetch(`${API_BASE}/transactions`)
+      if (response.ok) {
+        const data = await response.json()
+        setDashboardTransactions(data.transactions || [])
+      }
+    } catch (error) {
+      console.error('Failed to load dashboard transactions:', error)
+    } finally {
+      setDashboardLoading(false)
+    }
+  }
+
+  const handleClearAllData = async () => {
+    if (!confirm('Are you sure you want to delete all your transaction data? This cannot be undone.')) {
+      return
+    }
+    setDashboardLoading(true)
+    try {
+      const response = await apiFetch(`${API_BASE}/jobs`, { method: 'DELETE' })
+      if (response.ok) {
+        const data = await response.json()
+        console.log(`Deleted ${data.deleted_count} jobs`)
+        setDashboardTransactions([])
+        setSummary(null)
+        setTransactions([])
+      }
+    } catch (error) {
+      console.error('Failed to clear data:', error)
+    } finally {
+      setDashboardLoading(false)
+    }
+  }
+
   useEffect(() => {
+    if (activeView === 'dashboard') {
+      loadDashboardTransactions()
+    }
     if (activeView === 'categories') {
       loadCategories()
     }
@@ -347,6 +389,7 @@ function App() {
   const formatCurrency = (value?: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value || 0)
 
+
   const handleUpload = async (files: File[], forceReprocess = false) => {
     if (!files.length) return
 
@@ -410,9 +453,9 @@ function App() {
       setWasCategorized(uploadData.was_categorized || resultData.categorized || false)
       setPage(0)
 
-      // Step 3: Generate template
+      // Step 3: Generate template (don't force_reprocess - job already exists from step 1)
       setUploadProgress('Generating Excel template...')
-      const templateUrl = `${API_BASE}/template/convert?categorize=${categorize}&force_reprocess=${forceReprocess}`
+      const templateUrl = `${API_BASE}/template/convert?categorize=${categorize}&force_reprocess=false`
       const templateResponse = await apiFetch(templateUrl, {
         method: 'POST',
         body: buildFormData(files),
@@ -432,7 +475,9 @@ function App() {
 
       const catMsg = categorize ? ' with AI categorization' : ''
       const reprocessMsg = forceReprocess ? ' (re-processed)' : ''
-      setStatus(`Successfully processed ${resultData.transactions.length} transactions${catMsg}${reprocessMsg}. Template ready for download.`)
+      const dupSkipped = uploadData.duplicates_skipped || 0
+      const dupMsg = dupSkipped > 0 ? ` (${dupSkipped} duplicates skipped)` : ''
+      setStatus(`Successfully processed ${resultData.transactions.length} transactions${catMsg}${reprocessMsg}${dupMsg}. Template ready for download.`)
 
     } catch (error) {
       setUploadState('error')
@@ -491,7 +536,9 @@ function App() {
 
   const handleOverwriteAndReprocess = () => {
     if (!duplicateFound) return
-    handleUpload(duplicateFound.files, true)
+    const filesToProcess = duplicateFound.files
+    setDuplicateFound(null) // Close modal immediately to show upload progress
+    handleUpload(filesToProcess, true)
   }
 
   const handleCancelDuplicate = () => {
@@ -592,22 +639,22 @@ function App() {
         </div>
         <div className="nav-group">
           <div
-            className={`nav-item ${activeView === 'workspace' ? 'active' : ''}`}
-            onClick={() => setActiveView('workspace')}
+            className={`nav-item ${activeView === 'dashboard' ? 'active' : ''}`}
+            onClick={() => setActiveView('dashboard')}
           >
-            Workspace
+            Dashboard
+          </div>
+          <div
+            className={`nav-item ${activeView === 'upload' ? 'active' : ''}`}
+            onClick={() => setActiveView('upload')}
+          >
+            Upload Data
           </div>
           <div
             className={`nav-item ${activeView === 'categories' ? 'active' : ''}`}
             onClick={() => setActiveView('categories')}
           >
             Set Transaction Categories
-          </div>
-          <div
-            className={`nav-item ${activeView === 'insights' ? 'active' : ''}`}
-            onClick={() => setActiveView('insights')}
-          >
-            Insights
           </div>
           <div
             className={`nav-item ${activeView === 'exports' ? 'active' : ''}`}
@@ -812,7 +859,7 @@ function App() {
           </>
         )}
 
-        {activeView === 'workspace' && (
+        {activeView === 'upload' && (
           <>
             <header className="header">
               <div className="workspace-title">
@@ -1048,14 +1095,12 @@ function App() {
           </>
         )}
 
-        {activeView === 'insights' && (
-          <section className="card">
-            <div className="section-title">
-              <h3>Insights</h3>
-              <span>Coming soon</span>
-            </div>
-            <div className="table-empty">Insights feature is under development.</div>
-          </section>
+        {activeView === 'dashboard' && (
+          <InsightsDashboard
+            transactions={dashboardTransactions}
+            loading={dashboardLoading}
+            onClearAllData={handleClearAllData}
+          />
         )}
 
         {activeView === 'exports' && (

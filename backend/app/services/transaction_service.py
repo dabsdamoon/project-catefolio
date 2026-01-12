@@ -83,7 +83,7 @@ class TransactionService:
         user_id: str | None = None,
         overwrite_job_id: str | None = None,
     ) -> dict[str, Any]:
-        """Process uploaded transaction files.
+        """Process uploaded transaction files with deduplication.
 
         Args:
             files: List of uploaded files to process
@@ -103,17 +103,37 @@ class TransactionService:
             logger.info(f"Overwriting existing job: {overwrite_job_id}")
             self.repository.delete_job(overwrite_job_id, user_id=user_id)
 
+        # Get existing transaction signatures for deduplication
+        existing_signatures: set[str] = set()
+        if user_id:
+            existing_signatures = self.repository.get_all_transaction_signatures(user_id)
+            logger.info(f"Loaded {len(existing_signatures)} existing transaction signatures for deduplication")
+
         logger.info(f"Processing upload: {len(files)} files, categorize={categorize}")
-        transactions: list[dict[str, Any]] = []
+        all_raw_transactions: list[dict[str, Any]] = []  # For computing content_signature (before dedup)
+        transactions: list[dict[str, Any]] = []  # Deduplicated transactions to save
+        duplicates_skipped = 0
 
         for file in files:
             try:
                 df = self._read_dataframe(file)
                 file_transactions = self._prepare_transactions(df)
-                transactions.extend(file_transactions)
+                all_raw_transactions.extend(file_transactions)  # Keep raw for signature
+
+                # Deduplicate against existing transactions
+                new_transactions = []
+                for txn in file_transactions:
+                    sig = _transaction_signature(txn)
+                    if sig not in existing_signatures:
+                        new_transactions.append(txn)
+                        existing_signatures.add(sig)  # Add to set to catch duplicates within this upload
+                    else:
+                        duplicates_skipped += 1
+
+                transactions.extend(new_transactions)
                 file.file.seek(0)
                 self.repository.save_upload(file.filename, file.file.read(), user_id=user_id)
-                logger.info(f"Processed file '{file.filename}': {len(file_transactions)} transactions")
+                logger.info(f"Processed file '{file.filename}': {len(new_transactions)} new transactions ({len(file_transactions) - len(new_transactions)} duplicates skipped)")
             except HTTPException:
                 raise
             except Exception as e:
@@ -123,29 +143,22 @@ class TransactionService:
                     detail=f"Failed to process file '{file.filename}': {str(e)}",
                 )
 
-        # Compute content signature for duplicate detection
-        content_signature = self._compute_content_signature(transactions)
+        if duplicates_skipped > 0:
+            logger.info(f"Total duplicates skipped: {duplicates_skipped}")
+
+        # Compute content signature from RAW transactions (before dedup) so it matches check_duplicates
+        content_signature = self._compute_content_signature(all_raw_transactions)
 
         job_id = str(uuid4())
         logger.info(f"Created job {job_id} with {len(transactions)} total transactions")
-
-        rules: list[dict[str, str]] = []
-        user_entities = self.repository.list_entities(user_id=user_id)
-        user_rules = self._rules_from_entities(user_entities)
-        logger.debug(f"Loaded {len(user_entities)} user entities, {len(user_rules)} user rules")
 
         if categorize and self.categories:
             logger.info(f"AI categorization enabled - inferring categories for {len(transactions)} transactions")
             category_results, _ = self.inference.infer_categories(transactions, self.categories)
             self._apply_category_results(transactions, category_results)
             logger.info(f"Applied {len(category_results)} category results")
-
-            rules = self.inference.build_rules(transactions, user_rules=user_rules)
-            transactions = self.inference.apply_rules(transactions, rules)
         else:
             logger.info("AI categorization disabled - skipping LLM calls")
-            rules = user_rules
-            transactions = self.inference.apply_rules(transactions, rules)
 
         summary = self._build_summary(transactions)
         charts = self._build_charts(transactions)
@@ -157,11 +170,11 @@ class TransactionService:
             "summary": summary,
             "transactions": transactions,
             "charts": charts,
-            "rules": rules,
             "categories": [cat["name"] for cat in self.categories],
             "categorized": categorize and bool(self.categories),
             "narrative": self._build_narrative(summary),
             "content_signature": content_signature,
+            "duplicates_skipped": duplicates_skipped,
         }
         # save_job pops transactions from payload, so keep a reference
         transactions_copy = transactions
@@ -355,7 +368,10 @@ class TransactionService:
             date_str = date_parsed.date().isoformat()
 
             description = str(row.get("description", "")).strip()
-            category = str(row.get("category", "")).strip() or ("Income" if amount > 0 else "Expense")
+            # Category should be Uncategorized by default - AI will predict actual category
+            category = str(row.get("category", "")).strip() or "Uncategorized"
+            # Track transaction type (income/expense) separately from category
+            transaction_type = "income" if amount > 0 else "expense"
             entity_value = row.get("entity", "")
             entity = ""
             if pd.isna(entity_value):
@@ -375,6 +391,7 @@ class TransactionService:
                     "description": description,
                     "amount": amount,
                     "category": category,
+                    "transaction_type": transaction_type,
                     "entity": entity,
                     "raw": raw,
                 }
@@ -450,39 +467,22 @@ class TransactionService:
         )
 
     @staticmethod
-    def _rules_from_entities(entities: list[dict[str, str]]) -> list[dict[str, str]]:
-        rules: list[dict[str, str]] = []
-        for entity in entities:
-            name = entity.get("name", "").strip()
-            aliases = entity.get("aliases", [])
-            for term in [name, *aliases]:
-                term = str(term).strip()
-                if not term:
-                    continue
-                rules.append(
-                    {
-                        "pattern": term,
-                        "match_field": "description",
-                        "entity": name,
-                        "category": "",
-                    }
-                )
-        return rules
-
-    @staticmethod
     def _apply_category_results(
         transactions: list[dict[str, Any]],
         results: list[dict[str, Any]],
     ) -> None:
+        """Apply AI-predicted category to transactions.
+
+        Sets only the primary category (first prediction from AI).
+        Entity field is reserved for GraphRAG feature.
+        """
         for result in results:
             index = result.get("index", -1)
             categories = result.get("categories", [])
             if isinstance(categories, str):
                 categories = [categories]
             if 0 <= index < len(transactions) and categories:
-                transactions[index]["categories"] = categories[:3]
                 transactions[index]["category"] = categories[0]
-                transactions[index]["entity"] = categories[0]
 
     @staticmethod
     def _load_categories() -> list[dict[str, Any]]:

@@ -88,6 +88,7 @@ async def upload_files(
         created_at=payload["created_at"],
         is_duplicate=False,
         was_categorized=payload.get("categorized", False),
+        duplicates_skipped=payload.get("duplicates_skipped", 0),
     )
 
 
@@ -284,4 +285,97 @@ def get_current_user_info(
         "email": user.email,
         "name": user.name,
         "is_demo": user.is_demo,
+    }
+
+
+@router.get("/jobs")
+def list_jobs(
+    user: FirebaseUser = Depends(get_current_user),
+) -> list[dict]:
+    """List all jobs for the current user (metadata only, no transactions)."""
+    jobs = _repo.list_jobs(user_id=user.uid)
+    return jobs
+
+
+@router.delete("/jobs/{job_id}")
+def delete_job(
+    job_id: str,
+    user: FirebaseUser = Depends(get_current_user),
+) -> dict:
+    """Delete a specific job and its transactions."""
+    deleted = _repo.delete_job(job_id, user_id=user.uid)
+    if not deleted:
+        return {"status": "not_found", "job_id": job_id}
+    return {"status": "deleted", "job_id": job_id}
+
+
+@router.delete("/jobs")
+def delete_all_jobs(
+    user: FirebaseUser = Depends(get_current_user),
+) -> dict:
+    """Delete all jobs for the current user. Use with caution."""
+    jobs = _repo.list_jobs(user_id=user.uid)
+    deleted_count = 0
+    for job in jobs:
+        job_id = job.get("id")
+        if job_id and _repo.delete_job(job_id, user_id=user.uid):
+            deleted_count += 1
+    return {"status": "deleted", "deleted_count": deleted_count}
+
+
+def _transaction_signature(txn: dict) -> str:
+    """Generate a unique signature for a transaction based on date, description, amount."""
+    import hashlib
+    key = f"{txn.get('date', '')}|{txn.get('description', '')}|{txn.get('amount', 0)}"
+    return hashlib.md5(key.encode()).hexdigest()
+
+
+@router.get("/transactions")
+def get_all_transactions(
+    user: FirebaseUser = Depends(get_current_user),
+) -> dict:
+    """Get all transactions across all jobs for the current user (deduplicated).
+
+    Transactions are deduplicated based on date + description + amount signature.
+
+    Returns:
+        Dictionary with summary and deduplicated transactions list
+    """
+    jobs = _repo.list_jobs(user_id=user.uid)
+
+    seen_signatures: set[str] = set()
+    unique_transactions: list[dict] = []
+    duplicate_count = 0
+
+    for job_meta in jobs:
+        job_id = job_meta.get("id")
+        if not job_id:
+            continue
+
+        job = _repo.load_job(job_id, user_id=user.uid)
+        if not job:
+            continue
+
+        transactions = job.get("transactions", [])
+        for txn in transactions:
+            sig = _transaction_signature(txn)
+            if sig not in seen_signatures:
+                seen_signatures.add(sig)
+                unique_transactions.append(txn)
+            else:
+                duplicate_count += 1
+
+    # Compute summary from deduplicated transactions
+    total_income = sum(t["amount"] for t in unique_transactions if t.get("amount", 0) > 0)
+    total_expenses = sum(abs(t["amount"]) for t in unique_transactions if t.get("amount", 0) < 0)
+
+    return {
+        "summary": {
+            "total_income": round(total_income, 2),
+            "total_expenses": round(total_expenses, 2),
+            "net_savings": round(total_income - total_expenses, 2),
+        },
+        "transactions": unique_transactions,
+        "job_count": len(jobs),
+        "duplicate_count": duplicate_count,
     }

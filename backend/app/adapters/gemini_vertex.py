@@ -14,7 +14,6 @@ from app.core.logging import get_logger
 from app.prompt.entity_prompts import (
     build_category_prompt,
     build_entity_relationship_prompt,
-    build_rules_prompt,
 )
 
 logger = get_logger("catefolio.adapters.gemini")
@@ -32,16 +31,6 @@ class GeminiVertexAdapter:
                 f"Failed to initialize LLM model: {model_name}",
                 details={"model": model_name, "error": str(e)},
             ) from e
-
-    def infer_rules(self, transactions: list[dict[str, Any]]) -> list[dict[str, str]]:
-        sample = self._build_sample(transactions)
-        prompt = build_rules_prompt(sample)
-        logger.debug(f"Inferring rules for {len(sample)} sample transactions")
-
-        text = self._call_model(prompt, operation="infer_rules")
-        rules = self._parse_rules(text)
-        logger.info(f"Inferred {len(rules)} rules from {len(sample)} transactions")
-        return rules
 
     def infer_graph(
         self, transaction: dict[str, Any], root_context: str | None = None
@@ -109,52 +98,6 @@ class GeminiVertexAdapter:
                 f"Failed to communicate with LLM: {e}",
                 details={"operation": operation, "error": str(e)},
             ) from e
-
-    @staticmethod
-    def _build_sample(transactions: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        sample = []
-        for tx in transactions[:60]:
-            raw = tx.get("raw", {})
-            sample.append(
-                {
-                    "description": tx.get("description", ""),
-                    "amount": tx.get("amount", 0),
-                    "note": raw.get("note", ""),
-                    "display": raw.get("display", ""),
-                    "memo": raw.get("memo", ""),
-                }
-            )
-        return sample
-
-    def _parse_rules(self, text: str) -> list[dict[str, str]]:
-        cleaned = self._strip_code_fence(text)
-        try:
-            data = json.loads(cleaned)
-        except json.JSONDecodeError as e:
-            logger.warning(f"Failed to parse rules JSON: {e}. Raw response: {text[:200]}")
-            raise LLMParseError(
-                "Failed to parse rules from LLM response",
-                raw_response=text,
-                details={"error": str(e)},
-            ) from e
-
-        if not isinstance(data, list):
-            logger.warning(f"Expected list for rules, got {type(data).__name__}")
-            return []
-
-        rules: list[dict[str, str]] = []
-        for item in data:
-            if not isinstance(item, dict):
-                continue
-            rules.append(
-                {
-                    "pattern": str(item.get("pattern", "")).strip(),
-                    "match_field": str(item.get("match_field", "description")).strip(),
-                    "entity": str(item.get("entity", "")).strip(),
-                    "category": str(item.get("category", "")).strip(),
-                }
-            )
-        return rules
 
     def _parse_graph(self, text: str) -> dict[str, Any]:
         cleaned = self._strip_code_fence(text)

@@ -4,16 +4,6 @@ import json
 from typing import Any
 
 
-def build_rules_prompt(sample: list[dict[str, Any]]) -> str:
-    return (
-        "You are extracting lightweight mapping rules for transactions.\n"
-        "Return JSON only as an array of rules with keys: pattern, match_field, entity, category.\n"
-        "Rules must be grounded in provided fields (description, note, display, memo).\n"
-        "If uncertain, return an empty array.\n\n"
-        f"Transactions sample:\n{json.dumps(sample, ensure_ascii=False)}\n"
-    )
-
-
 def build_entity_relationship_prompt(
     transaction: dict[str, Any],
     root_context: str | None = None,
