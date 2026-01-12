@@ -1,2 +1,13 @@
-test_*/
+# env file
 .env
+
+# temp files
+test_*/
+tmp/
+
+# cached files
+backend/data
+
+# test scripts
+backend/scripts/test*
+backend/pytest.ini

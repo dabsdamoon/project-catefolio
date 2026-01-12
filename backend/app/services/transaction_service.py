@@ -2,39 +2,91 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from io import BytesIO
+import json
+import os
+from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
 import pandas as pd
 from fastapi import HTTPException, UploadFile
 
+from app.core.exceptions import FileProcessingError, JobNotFoundError, ValidationError
+from app.core.logging import get_logger
 from app.repositories.local_repo import LocalRepository
 from app.services.inference_service import InferenceService
 
+logger = get_logger("catefolio.services.transaction")
+
 
 class TransactionService:
+    MAX_FILES_PER_UPLOAD = 10
+    MAX_ROWS_PER_FILE = 10000
+
     def __init__(self, repository: LocalRepository) -> None:
         self.repository = repository
         self.inference = InferenceService()
+        self.categories = self._load_categories()
+        logger.info(f"TransactionService initialized with {len(self.categories)} categories")
 
-    def process_upload(self, files: list[UploadFile]) -> dict[str, Any]:
-        if len(files) > 10:
-            raise HTTPException(status_code=400, detail="Maximum 10 files per upload.")
+    def process_upload(self, files: list[UploadFile], categorize: bool = False) -> dict[str, Any]:
+        """Process uploaded transaction files.
 
+        Args:
+            files: List of uploaded files to process
+            categorize: Whether to run AI categorization (default: False)
+        """
+        if len(files) > self.MAX_FILES_PER_UPLOAD:
+            logger.warning(f"Upload rejected: {len(files)} files exceeds limit of {self.MAX_FILES_PER_UPLOAD}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Maximum {self.MAX_FILES_PER_UPLOAD} files per upload.",
+            )
+
+        logger.info(f"Processing upload: {len(files)} files, categorize={categorize}")
         transactions: list[dict[str, Any]] = []
+
         for file in files:
-            df = self._read_dataframe(file)
-            transactions.extend(self._prepare_transactions(df))
-            file.file.seek(0)
-            self.repository.save_upload(file.filename, file.file.read())
+            try:
+                df = self._read_dataframe(file)
+                file_transactions = self._prepare_transactions(df)
+                transactions.extend(file_transactions)
+                file.file.seek(0)
+                self.repository.save_upload(file.filename, file.file.read())
+                logger.info(f"Processed file '{file.filename}': {len(file_transactions)} transactions")
+            except HTTPException:
+                raise
+            except Exception as e:
+                logger.error(f"Error processing file '{file.filename}': {e}", exc_info=True)
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Failed to process file '{file.filename}': {str(e)}",
+                )
 
         job_id = str(uuid4())
+        logger.info(f"Created job {job_id} with {len(transactions)} total transactions")
+
+        rules: list[dict[str, str]] = []
         user_entities = self.repository.list_entities()
         user_rules = self._rules_from_entities(user_entities)
-        rules = self.inference.build_rules(transactions, user_rules=user_rules)
-        transactions = self.inference.apply_rules(transactions, rules)
+        logger.debug(f"Loaded {len(user_entities)} user entities, {len(user_rules)} user rules")
+
+        if categorize and self.categories:
+            logger.info(f"AI categorization enabled - inferring categories for {len(transactions)} transactions")
+            category_results, _ = self.inference.infer_categories(transactions, self.categories)
+            self._apply_category_results(transactions, category_results)
+            logger.info(f"Applied {len(category_results)} category results")
+
+            rules = self.inference.build_rules(transactions, user_rules=user_rules)
+            transactions = self.inference.apply_rules(transactions, rules)
+        else:
+            logger.info("AI categorization disabled - skipping LLM calls")
+            rules = user_rules
+            transactions = self.inference.apply_rules(transactions, rules)
+
         summary = self._build_summary(transactions)
         charts = self._build_charts(transactions)
+
         payload = {
             "status": "processed",
             "files": [file.filename for file in files],
@@ -43,15 +95,24 @@ class TransactionService:
             "transactions": transactions,
             "charts": charts,
             "rules": rules,
+            "categories": self.categories,
+            "categorized": categorize and bool(self.categories),
             "narrative": self._build_narrative(summary),
         }
         self.repository.save_job(job_id, payload)
         payload["job_id"] = job_id
+
+        logger.info(
+            f"Job {job_id} complete: {len(transactions)} transactions, "
+            f"income=${summary['total_income']:,.2f}, expenses=${summary['total_expenses']:,.2f}"
+        )
         return payload
 
     def get_job(self, job_id: str) -> dict[str, Any]:
+        logger.debug(f"Retrieving job: {job_id}")
         job = self.repository.load_job(job_id)
         if not job:
+            logger.warning(f"Job not found: {job_id}")
             raise HTTPException(status_code=404, detail="Job not found.")
         return job
 
@@ -118,24 +179,43 @@ class TransactionService:
     def _read_dataframe(self, file: UploadFile) -> pd.DataFrame:
         raw = file.file.read()
         if not raw:
+            logger.warning(f"Empty file uploaded: {file.filename}")
             raise HTTPException(status_code=400, detail=f"{file.filename} is empty.")
+
         stream = BytesIO(raw)
         filename = file.filename.lower()
-        if filename.endswith(".csv"):
-            df = pd.read_csv(stream)
-        elif filename.endswith((".xlsx", ".xls")):
-            df = pd.read_excel(stream)
-            if self._needs_header_extract([str(col) for col in df.columns]):
-                stream.seek(0)
-                df = pd.read_excel(stream, header=None)
-                df = self._extract_header_frame(df)
-        else:
-            raise HTTPException(status_code=400, detail=f"Unsupported file type: {file.filename}")
+
+        try:
+            if filename.endswith(".csv"):
+                df = pd.read_csv(stream)
+            elif filename.endswith((".xlsx", ".xls")):
+                df = pd.read_excel(stream)
+                if self._needs_header_extract([str(col) for col in df.columns]):
+                    stream.seek(0)
+                    df = pd.read_excel(stream, header=None)
+                    df = self._extract_header_frame(df)
+            else:
+                logger.warning(f"Unsupported file type: {file.filename}")
+                raise HTTPException(status_code=400, detail=f"Unsupported file type: {file.filename}")
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Failed to read file '{file.filename}': {e}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Failed to read file '{file.filename}': {str(e)}",
+            )
+
+        logger.debug(f"Read dataframe from '{file.filename}': {df.shape[0]} rows, {df.shape[1]} columns")
         return df
 
     def _prepare_transactions(self, df: pd.DataFrame) -> list[dict[str, Any]]:
-        if df.shape[0] > 10000:
-            raise HTTPException(status_code=400, detail="File exceeds 10,000 rows.")
+        if df.shape[0] > self.MAX_ROWS_PER_FILE:
+            logger.warning(f"File exceeds {self.MAX_ROWS_PER_FILE} rows: {df.shape[0]}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"File exceeds {self.MAX_ROWS_PER_FILE:,} rows.",
+            )
 
         mapping = self._normalize_columns([str(col) for col in df.columns])
         renamed = df.rename(columns=mapping)
@@ -147,6 +227,8 @@ class TransactionService:
             )
 
         transactions: list[dict[str, Any]] = []
+        skipped_count = 0
+
         for _, row in renamed.iterrows():
             amount = None
             if "amount" in renamed.columns:
@@ -163,12 +245,19 @@ class TransactionService:
                     amount = credit if credit > 0 else -debit
                 except (TypeError, ValueError):
                     amount = None
+
             if amount is None:
+                skipped_count += 1
                 continue
 
-            date_value = row["date"]
+            date_value = row.get("date")
+            if date_value is None:
+                skipped_count += 1
+                continue
+
             date_parsed = pd.to_datetime(date_value, errors="coerce")
             if pd.isna(date_parsed):
+                skipped_count += 1
                 continue
             date_str = date_parsed.date().isoformat()
 
@@ -183,9 +272,7 @@ class TransactionService:
             entity = entity or "Unassigned"
             raw = {
                 "note": "" if pd.isna(row.get("note", "")) else str(row.get("note", "")).strip(),
-                "display": ""
-                if pd.isna(row.get("display", ""))
-                else str(row.get("display", "")).strip(),
+                "display": "" if pd.isna(row.get("display", "")) else str(row.get("display", "")).strip(),
                 "memo": "" if pd.isna(row.get("memo", "")) else str(row.get("memo", "")).strip(),
             }
 
@@ -199,6 +286,10 @@ class TransactionService:
                     "raw": raw,
                 }
             )
+
+        if skipped_count > 0:
+            logger.debug(f"Skipped {skipped_count} rows with invalid data")
+
         return transactions
 
     @staticmethod
@@ -284,3 +375,44 @@ class TransactionService:
                     }
                 )
         return rules
+
+    @staticmethod
+    def _apply_category_results(
+        transactions: list[dict[str, Any]],
+        results: list[dict[str, Any]],
+    ) -> None:
+        for result in results:
+            index = result.get("index", -1)
+            categories = result.get("categories", [])
+            if isinstance(categories, str):
+                categories = [categories]
+            if 0 <= index < len(transactions) and categories:
+                transactions[index]["categories"] = categories[:3]
+                transactions[index]["category"] = categories[0]
+                transactions[index]["entity"] = categories[0]
+
+    @staticmethod
+    def _load_categories() -> list[str]:
+        base_dir = Path(__file__).resolve().parents[3]
+        default_path = base_dir / "test_expense_categories" / "expense_category.json"
+        path = Path(os.getenv("CATEGORY_PATH", str(default_path)))
+
+        if not path.exists():
+            logger.debug(f"Category file not found: {path}")
+            return []
+
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as e:
+            logger.warning(f"Failed to parse category file: {e}")
+            return []
+
+        if isinstance(data, dict):
+            categories = [str(value).strip() for value in data.values() if str(value).strip()]
+        elif isinstance(data, list):
+            categories = [str(value).strip() for value in data if str(value).strip()]
+        else:
+            categories = []
+
+        logger.debug(f"Loaded {len(categories)} categories from {path}")
+        return categories

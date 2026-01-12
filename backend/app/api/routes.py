@@ -32,8 +32,17 @@ def health() -> dict[str, str]:
 
 
 @router.post("/upload", response_model=UploadResponse)
-async def upload_files(files: list[UploadFile] = File(...)) -> UploadResponse:
-    payload = _service.process_upload(files)
+async def upload_files(
+    files: list[UploadFile] = File(...),
+    categorize: bool = False,
+) -> UploadResponse:
+    """Upload and process transaction files.
+
+    Args:
+        files: List of CSV/XLS/XLSX files to process
+        categorize: Whether to run AI categorization (default: False, as it's in testing)
+    """
+    payload = _service.process_upload(files, categorize=categorize)
     return UploadResponse(
         job_id=payload["job_id"],
         status=payload["status"],
@@ -115,8 +124,17 @@ def infer_graph(payload: TransactionInput, debug: bool = False) -> GraphInferenc
 
 
 @router.post("/template/convert")
-async def convert_template(files: list[UploadFile] = File(...)) -> StreamingResponse:
-    payload = _service.process_upload(files)
+async def convert_template(
+    files: list[UploadFile] = File(...),
+    categorize: bool = False,
+) -> StreamingResponse:
+    """Convert transaction files to Excel template format.
+
+    Args:
+        files: List of CSV/XLS/XLSX files to process
+        categorize: Whether to run AI categorization (default: False)
+    """
+    payload = _service.process_upload(files, categorize=categorize)
     template_bytes = _template_service.build_template_bytes(payload["transactions"])
     filename = "account_template_output.xlsx"
     return StreamingResponse(

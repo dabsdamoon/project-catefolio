@@ -1,0 +1,22 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Work+Sans:wght@400;500;600&display=swap');
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Work Sans', 'Helvetica Neue', sans-serif;
+  color: #101828;
+  background: radial-gradient(circle at top left, #fff1e6 0%, transparent 55%),
+    radial-gradient(circle at 85% 10%, #e7f9f7 0%, transparent 45%),
+    #f6f4f1;
+  min-height: 100vh;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}

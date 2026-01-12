@@ -29,3 +29,20 @@ def build_entity_relationship_prompt(
         f"Root organization context: {context}\n\n"
         f"Transaction:\n{payload}\n"
     )
+
+
+def build_category_prompt(
+    transactions: list[dict[str, Any]],
+    categories: list[str],
+) -> str:
+    payload = json.dumps(transactions, ensure_ascii=False)
+    category_list = json.dumps(categories, ensure_ascii=False)
+    return (
+        "You are assigning up to three categories to each transaction.\n"
+        "Choose from the provided categories list only.\n"
+        "Return JSON only as an array of objects: {index, categories}.\n"
+        "The categories field must be a list with 1 to 3 items.\n"
+        "If no category fits, return categories as [\"Uncategorized\"].\n\n"
+        f"Categories:\n{category_list}\n\n"
+        f"Transactions:\n{payload}\n"
+    )
