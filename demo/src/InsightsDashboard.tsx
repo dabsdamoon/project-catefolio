@@ -14,6 +14,7 @@ type DirectionFilter = 'both' | 'credit' | 'debit'
 interface InsightsDashboardProps {
   transactions: Transaction[]
   loading?: boolean
+  error?: string | null
   onCategoryFilter?: (category: string) => void
   onCounterpartyFilter?: (counterparty: string) => void
   onClearAllData?: () => void
@@ -38,6 +39,7 @@ const formatCompact = (value: number) =>
 export default function InsightsDashboard({
   transactions,
   loading = false,
+  error = null,
   onCategoryFilter,
   onCounterpartyFilter,
   onClearAllData,
@@ -316,6 +318,22 @@ export default function InsightsDashboard({
 
   const hasActiveFilters = direction !== 'both' || selectedCategory !== 'All' || searchQuery || selectedDay
 
+  if (error) {
+    return (
+      <div className="insights-empty">
+        <div className="insights-empty-icon">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+        </div>
+        <h3>Error Loading Data</h3>
+        <p>{error}</p>
+      </div>
+    )
+  }
+
   if (loading) {
     return (
       <div className="insights-empty">
@@ -593,12 +611,10 @@ export default function InsightsDashboard({
                   {topCategories.credit.map(([label, value]) => {
                     const maxVal = topCategories.credit[0]?.[1] || 1
                     return (
-                      <div
+                      <button
                         key={label}
                         className="bar-item"
                         onClick={() => handleCategoryClick(label)}
-                        role="button"
-                        tabIndex={0}
                       >
                         <div className="bar-info">
                           <span className="bar-label">{label}</span>
@@ -607,7 +623,7 @@ export default function InsightsDashboard({
                         <div className="bar-track">
                           <div className="bar-fill credit" style={{ width: `${(value / maxVal) * 100}%` }} />
                         </div>
-                      </div>
+                      </button>
                     )
                   })}
                 </div>
@@ -623,12 +639,10 @@ export default function InsightsDashboard({
                   {topCategories.debit.map(([label, value]) => {
                     const maxVal = topCategories.debit[0]?.[1] || 1
                     return (
-                      <div
+                      <button
                         key={label}
                         className="bar-item"
                         onClick={() => handleCategoryClick(label)}
-                        role="button"
-                        tabIndex={0}
                       >
                         <div className="bar-info">
                           <span className="bar-label">{label}</span>
@@ -637,7 +651,7 @@ export default function InsightsDashboard({
                         <div className="bar-track">
                           <div className="bar-fill debit" style={{ width: `${(value / maxVal) * 100}%` }} />
                         </div>
-                      </div>
+                      </button>
                     )
                   })}
                 </div>
@@ -660,19 +674,17 @@ export default function InsightsDashboard({
                 </div>
                 <div className="counterparty-list">
                   {topCounterparties.credit.map(([label, data]) => (
-                    <div
+                    <button
                       key={label}
                       className="counterparty-item"
                       onClick={() => handleCounterpartyClick(label)}
-                      role="button"
-                      tabIndex={0}
                     >
                       <div className="counterparty-name">{label}</div>
                       <div className="counterparty-stats">
                         <span className="counterparty-amount credit">{formatCurrency(data.total)}</span>
                         <span className="counterparty-count">{data.count}x</span>
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -685,19 +697,17 @@ export default function InsightsDashboard({
                 </div>
                 <div className="counterparty-list">
                   {topCounterparties.debit.map(([label, data]) => (
-                    <div
+                    <button
                       key={label}
                       className="counterparty-item"
                       onClick={() => handleCounterpartyClick(label)}
-                      role="button"
-                      tabIndex={0}
                     >
                       <div className="counterparty-name">{label}</div>
                       <div className="counterparty-stats">
                         <span className="counterparty-amount debit">{formatCurrency(data.total)}</span>
                         <span className="counterparty-count">{data.count}x</span>
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>

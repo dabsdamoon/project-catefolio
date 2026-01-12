@@ -18,6 +18,7 @@ Description:
             └── ...
 """
 
+from google.cloud import firestore
 from google.cloud.firestore_v1 import Client
 
 BATCH_SIZE = 500
@@ -131,7 +132,3 @@ def downgrade(db: Client) -> None:
         reverted_count += 1
 
     print(f"  Reverted {reverted_count} jobs")
-
-
-# Import firestore for DELETE_FIELD
-from google.cloud import firestore

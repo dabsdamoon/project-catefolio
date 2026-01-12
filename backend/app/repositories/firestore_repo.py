@@ -18,6 +18,7 @@ import firebase_admin
 from firebase_admin import firestore
 from google.cloud.firestore_v1 import FieldFilter
 
+from app.core.utils import transaction_signature
 from app.storage.cloud_storage import CloudStorageService
 
 
@@ -174,8 +175,6 @@ class FirestoreRepository:
         Returns:
             Set of transaction signatures (md5 hashes of date|description|amount)
         """
-        import hashlib
-
         signatures: set[str] = set()
         jobs = self.list_jobs(user_id)
 
@@ -188,8 +187,7 @@ class FirestoreRepository:
             transactions = self._load_transactions(job_ref)
 
             for txn in transactions:
-                key = f"{txn.get('date', '')}|{txn.get('description', '')}|{txn.get('amount', 0)}"
-                sig = hashlib.md5(key.encode()).hexdigest()
+                sig = transaction_signature(txn)
                 signatures.add(sig)
 
         return signatures

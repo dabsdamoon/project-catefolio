@@ -20,9 +20,23 @@ logger = get_logger("catefolio.adapters.gemini")
 
 
 class GeminiVertexAdapter:
+    _initialized = False
+
     def __init__(self, model_name: str) -> None:
         self.model_name = model_name
         try:
+            # Initialize Vertex AI with project and location (only once)
+            if not GeminiVertexAdapter._initialized:
+                project = os.getenv("GOOGLE_CLOUD_PROJECT") or os.getenv("VERTEX_PROJECT")
+                location = os.getenv("VERTEX_LOCATION", "us-central1")
+                if not project:
+                    raise ValueError(
+                        "GOOGLE_CLOUD_PROJECT or VERTEX_PROJECT environment variable is required for AI categorization"
+                    )
+                vertexai.init(project=project, location=location)
+                GeminiVertexAdapter._initialized = True
+                logger.info(f"Initialized Vertex AI with project={project}, location={location}")
+
             self.model = GenerativeModel(model_name)
             logger.info(f"Initialized GeminiVertexAdapter with model: {model_name}")
         except Exception as e:
@@ -57,9 +71,6 @@ class GeminiVertexAdapter:
         """
         prompt = build_category_prompt(transactions, categories)
         logger.debug(f"Inferring categories for batch of {len(transactions)} transactions")
-
-        with open("/Users/dabsdamoon/projects/project-catefolio/tmp/prompt.txt", "w") as f:
-            f.write(prompt)
 
         text = self._call_model(prompt, operation="infer_categories_batch")
         results = self._parse_categories(text)

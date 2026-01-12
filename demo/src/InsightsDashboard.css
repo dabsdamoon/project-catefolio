@@ -653,8 +653,21 @@
 }
 
 .bar-item {
+  /* Button reset */
+  border: none;
+  background: none;
+  text-align: left;
+  font-family: inherit;
+  width: 100%;
+  padding: 0;
+
   cursor: pointer;
   transition: transform var(--transition-fast);
+}
+
+.bar-item:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
 }
 
 .bar-item:hover {
@@ -712,6 +725,12 @@
 }
 
 .counterparty-item {
+  /* Button reset */
+  border: none;
+  font-family: inherit;
+  text-align: left;
+  width: 100%;
+
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -720,6 +739,11 @@
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all var(--transition-fast);
+}
+
+.counterparty-item:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
 }
 
 .counterparty-item:hover {

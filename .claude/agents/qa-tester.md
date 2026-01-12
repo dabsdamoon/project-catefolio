@@ -270,6 +270,65 @@ backend/
 6. **Error Recovery**: User should be able to recover from errors
 7. **Data Persistence**: Refresh should maintain state (for dashboard)
 
+## Backend Code QA Checks
+
+When testing AI categorization or other backend features, also check for these code-level issues:
+
+### LLM Prompt Template Issues
+
+**Location**: `backend/app/prompt/entity_prompts.py`
+
+| Issue | Pattern | Fix |
+|-------|---------|-----|
+| **Unescaped curly braces** | `{index, categories}` in prompt with `.format()` | Use `{{index, categories}}` for literal braces |
+| **Missing format variables** | Template uses `{foo}` but `.format()` doesn't provide it | Add missing variable to format call |
+| **JSON examples in prompts** | `{"key": "value"}` in format strings | Escape as `{{"key": "value"}}` |
+
+**How to detect:**
+```bash
+# Search for potential format string issues in prompt files
+grep -n "\.format(" backend/app/prompt/*.py
+# Then check the template strings for unescaped single braces
+```
+
+**Common error**: `KeyError: 'index, categories'` - This means literal curly braces in the prompt template are being interpreted as format placeholders.
+
+### Service Initialization Issues
+
+**Location**: `backend/app/adapters/`, `backend/app/services/`
+
+| Issue | Symptom | Check |
+|-------|---------|-------|
+| **Missing SDK init** | `ValueError` or connection errors | Verify `vertexai.init()` called before model creation |
+| **Missing env vars** | Service fails silently or with cryptic error | Check required env vars are set |
+| **Lazy init bugs** | First request fails, subsequent work | Check singleton/class-level initialization |
+
+### API Error Handling
+
+**Location**: `backend/app/api/routes.py`
+
+| Issue | Check |
+|-------|-------|
+| **Unhandled exceptions** | Ensure service errors convert to proper HTTPException |
+| **Wrong status codes** | 404 for not found, 400 for bad request, 500 for server errors |
+| **Leaked error details** | Internal errors should not expose stack traces to users |
+
+### Testing Procedure for AI Categorization
+
+```markdown
+1. Check prompt templates for format string issues:
+   - Read `backend/app/prompt/entity_prompts.py`
+   - Look for `{` and `}` in template strings
+   - Verify JSON examples use `{{` and `}}`
+2. Check adapter initialization:
+   - Read `backend/app/adapters/gemini_vertex.py`
+   - Verify `vertexai.init()` is called before `GenerativeModel()`
+3. Check service error handling:
+   - Read `backend/app/services/inference_service.py`
+   - Verify exceptions are caught and converted appropriately
+4. Test the flow end-to-end with AI toggle enabled
+```
+
 ## Test Data
 
 **Sample Files Location**: `test_inputs/`

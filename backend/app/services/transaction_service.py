@@ -14,16 +14,11 @@ from fastapi import HTTPException, UploadFile
 
 from app.core.exceptions import FileProcessingError, JobNotFoundError, ValidationError
 from app.core.logging import get_logger
+from app.core.utils import transaction_signature
 from app.repositories.firestore_repo import FirestoreRepository
 from app.services.inference_service import InferenceService
 
 logger = get_logger("catefolio.services.transaction")
-
-
-def _transaction_signature(txn: dict[str, Any]) -> str:
-    """Generate a unique signature for a transaction based on date, description, amount."""
-    key = f"{txn.get('date', '')}|{txn.get('description', '')}|{txn.get('amount', 0)}"
-    return hashlib.md5(key.encode()).hexdigest()
 
 
 class TransactionService:
@@ -123,7 +118,7 @@ class TransactionService:
                 # Deduplicate against existing transactions
                 new_transactions = []
                 for txn in file_transactions:
-                    sig = _transaction_signature(txn)
+                    sig = transaction_signature(txn)
                     if sig not in existing_signatures:
                         new_transactions.append(txn)
                         existing_signatures.add(sig)  # Add to set to catch duplicates within this upload
@@ -222,7 +217,7 @@ class TransactionService:
             key=lambda t: (t.get("date", ""), t.get("description", ""), t.get("amount", 0))
         )
         # Create signature from all transaction signatures
-        signatures = [_transaction_signature(t) for t in sorted_txns]
+        signatures = [transaction_signature(t) for t in sorted_txns]
         combined = "|".join(signatures)
         return hashlib.md5(combined.encode()).hexdigest()
 
@@ -466,8 +461,8 @@ class TransactionService:
             "Review the category breakdown to spot the largest cost drivers."
         )
 
-    @staticmethod
     def _apply_category_results(
+        self,
         transactions: list[dict[str, Any]],
         results: list[dict[str, Any]],
     ) -> None:
@@ -475,14 +470,22 @@ class TransactionService:
 
         Sets only the primary category (first prediction from AI).
         Entity field is reserved for GraphRAG feature.
+        Validates that returned categories are in the allowed list.
         """
+        valid_category_names = {cat["name"] for cat in self.categories}
+
         for result in results:
             index = result.get("index", -1)
             categories = result.get("categories", [])
             if isinstance(categories, str):
                 categories = [categories]
             if 0 <= index < len(transactions) and categories:
-                transactions[index]["category"] = categories[0]
+                # Validate category against allowed list
+                category = categories[0]
+                if category in valid_category_names:
+                    transactions[index]["category"] = category
+                else:
+                    logger.warning(f"LLM returned invalid category '{category}', keeping default")
 
     @staticmethod
     def _load_categories() -> list[dict[str, Any]]:
