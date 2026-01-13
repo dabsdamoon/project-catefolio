@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -5,9 +7,11 @@ from app.api.routes import router as api_router
 
 app = FastAPI(title="Catefolio API", version="0.1.0")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
+# Environment-based CORS configuration
+ENVIRONMENT = os.environ.get("ENVIRONMENT", "development")
+
+CORS_ORIGINS = {
+    "development": [
         "http://localhost:5173",
         "http://localhost:5174",
         "http://localhost:5175",
@@ -17,6 +21,23 @@ app.add_middleware(
         "http://127.0.0.1:5175",
         "http://127.0.0.1:5176",
     ],
+    "production": [
+        "https://catefolio-web.vercel.app",
+        "https://catefolio-web-staging.vercel.app",
+    ],
+}
+
+origins = CORS_ORIGINS.get(ENVIRONMENT, CORS_ORIGINS["development"])
+
+# Allow Vercel preview deployments in production
+allow_origin_regex = (
+    r"https://catefolio-web-.*\.vercel\.app" if ENVIRONMENT == "production" else None
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_origin_regex=allow_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
