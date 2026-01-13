@@ -158,24 +158,3 @@ repo.list_entities()
 ```
 
 ---
-
-## Project Structure
-
-```
-backend/
-├── app/
-│   ├── api/routes.py           # API endpoints
-│   ├── auth/
-│   │   └── firebase_auth.py    # Firebase Auth middleware
-│   ├── repositories/
-│   │   ├── firestore_repo.py   # Firestore repository (primary)
-│   │   └── local_repo.py       # Local file repository (legacy)
-│   ├── storage/
-│   │   └── cloud_storage.py    # Cloud Storage service
-│   ├── services/               # Business logic
-│   └── schemas/models.py       # Pydantic models
-├── migrations/
-│   ├── runner.py               # Migration runner
-│   └── m_*.py                  # Migration scripts
-└── requirements.txt
-```
