@@ -36,6 +36,11 @@ const formatCompact = (value: number) =>
     compactDisplay: 'short',
   }).format(value)
 
+// Chart constants (outside component to avoid dependency issues)
+const CHART_WIDTH = 800
+const CHART_HEIGHT = 200
+const CHART_PADDING = { top: 20, right: 20, bottom: 30, left: 60 }
+
 export default function InsightsDashboard({
   transactions,
   loading = false,
@@ -257,12 +262,9 @@ export default function InsightsDashboard({
     setExplorerPage(0)
   }
 
-  // Chart dimensions
-  const chartWidth = 800
-  const chartHeight = 200
-  const chartPadding = { top: 20, right: 20, bottom: 30, left: 60 }
-  const plotWidth = chartWidth - chartPadding.left - chartPadding.right
-  const plotHeight = chartHeight - chartPadding.top - chartPadding.bottom
+  // Chart dimensions (using module constants)
+  const plotWidth = CHART_WIDTH - CHART_PADDING.left - CHART_PADDING.right
+  const plotHeight = CHART_HEIGHT - CHART_PADDING.top - CHART_PADDING.bottom
 
   // Build chart paths and points
   const chartData = useMemo(() => {
@@ -274,25 +276,25 @@ export default function InsightsDashboard({
     const xStep = labels.length > 1 ? plotWidth / (labels.length - 1) : plotWidth / 2
 
     const creditPoints = labels.map((_, i) => ({
-      x: chartPadding.left + i * xStep,
-      y: chartPadding.top + plotHeight - (data[i].credit / maxValue) * plotHeight,
+      x: CHART_PADDING.left + i * xStep,
+      y: CHART_PADDING.top + plotHeight - (data[i].credit / maxValue) * plotHeight,
     }))
 
     const debitPoints = labels.map((_, i) => ({
-      x: chartPadding.left + i * xStep,
-      y: chartPadding.top + plotHeight - (data[i].debit / maxValue) * plotHeight,
+      x: CHART_PADDING.left + i * xStep,
+      y: CHART_PADDING.top + plotHeight - (data[i].debit / maxValue) * plotHeight,
     }))
 
     const creditPath = creditPoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ')
     const debitPath = debitPoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ')
 
-    const baseline = chartPadding.top + plotHeight
+    const baseline = CHART_PADDING.top + plotHeight
     const creditArea = `${creditPath} L${creditPoints[creditPoints.length - 1]?.x || 0},${baseline} L${creditPoints[0]?.x || 0},${baseline} Z`
     const debitArea = `${debitPath} L${debitPoints[debitPoints.length - 1]?.x || 0},${baseline} L${debitPoints[0]?.x || 0},${baseline} Z`
 
     const points = labels.map((date, i) => ({
       date,
-      x: chartPadding.left + i * xStep,
+      x: CHART_PADDING.left + i * xStep,
       creditY: creditPoints[i].y,
       debitY: debitPoints[i].y,
       credit: data[i].credit,
@@ -311,7 +313,7 @@ export default function InsightsDashboard({
     const tickCount = 4
     return Array.from({ length: tickCount + 1 }, (_, i) => {
       const value = (maxValue / tickCount) * i
-      const y = chartPadding.top + plotHeight - (value / maxValue) * plotHeight
+      const y = CHART_PADDING.top + plotHeight - (value / maxValue) * plotHeight
       return { value, y }
     })
   }, [chartData, plotHeight])
@@ -506,7 +508,7 @@ export default function InsightsDashboard({
         <div className="insights-chart-container">
           <svg
             className="insights-chart"
-            viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+            viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
             preserveAspectRatio="xMidYMid meet"
           >
             {/* Grid lines */}
@@ -514,9 +516,9 @@ export default function InsightsDashboard({
               {yTicks.map((tick, i) => (
                 <line
                   key={i}
-                  x1={chartPadding.left}
+                  x1={CHART_PADDING.left}
                   y1={tick.y}
-                  x2={chartWidth - chartPadding.right}
+                  x2={CHART_WIDTH - CHART_PADDING.right}
                   y2={tick.y}
                   className="grid-line"
                 />
@@ -526,7 +528,7 @@ export default function InsightsDashboard({
             {/* Y-axis labels */}
             <g className="chart-y-axis">
               {yTicks.map((tick, i) => (
-                <text key={i} x={chartPadding.left - 8} y={tick.y + 4} className="axis-label">
+                <text key={i} x={CHART_PADDING.left - 8} y={tick.y + 4} className="axis-label">
                   {formatCompact(tick.value)}
                 </text>
               ))}
@@ -551,9 +553,9 @@ export default function InsightsDashboard({
               >
                 <line
                   x1={point.x}
-                  y1={chartPadding.top}
+                  y1={CHART_PADDING.top}
                   x2={point.x}
-                  y2={chartPadding.top + plotHeight}
+                  y2={CHART_PADDING.top + plotHeight}
                   className="point-line"
                 />
                 <circle cx={point.x} cy={point.creditY} r="5" className="point-circle credit" />
