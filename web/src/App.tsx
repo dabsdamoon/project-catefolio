@@ -1,11 +1,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router'
 import './App.css'
 import InsightsDashboard from './InsightsDashboard'
-
-const API_ENDPOINTS = {
-  local: 'http://localhost:8000',
-  cloud: import.meta.env.VITE_API_BASE || 'http://localhost:8000',
-}
 
 const getStoredApiMode = (): 'local' | 'cloud' => {
   const stored = localStorage.getItem('catefolio_api_mode')
@@ -51,18 +47,14 @@ const parseCategoryTSV = async (file: File): Promise<CategoryKeywordsMap> => {
 }
 const DATES_PER_PAGE = 6
 
-// Demo mode: Generate or retrieve a unique session ID
-const getDemoUserId = (): string => {
-  const STORAGE_KEY = 'catefolio_demo_user_id'
-  let userId = localStorage.getItem(STORAGE_KEY)
-  if (!userId) {
-    userId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
-    localStorage.setItem(STORAGE_KEY, userId)
-  }
-  return userId
+interface AppProps {
+  apiFetch: (url: string, options?: RequestInit) => Promise<Response>
+  apiEndpoints: { local: string; cloud: string }
+  isDemo: boolean
+  userDisplayName?: string
+  userPhotoURL?: string | null
+  onSignOut?: () => void
 }
-
-const DEMO_USER_ID = getDemoUserId()
 
 type Summary = {
   total_income: number
@@ -97,16 +89,9 @@ function Spinner() {
   )
 }
 
-function App() {
+function App({ apiFetch, apiEndpoints, isDemo, userDisplayName, userPhotoURL, onSignOut }: AppProps) {
   const [apiMode, setApiMode] = useState<'local' | 'cloud'>(getStoredApiMode)
-  const API_BASE = API_ENDPOINTS[apiMode]
-
-  // API helper with demo auth header
-  const apiFetch = useCallback(async (url: string, options: RequestInit = {}): Promise<Response> => {
-    const headers = new Headers(options.headers)
-    headers.set('X-Demo-User-Id', DEMO_USER_ID)
-    return fetch(url, { ...options, headers })
-  }, [])
+  const API_BASE = apiEndpoints[apiMode]
 
   const handleApiModeChange = (mode: 'local' | 'cloud') => {
     setApiMode(mode)
@@ -708,6 +693,30 @@ function App() {
           <div className="api-switcher-url" title={API_BASE}>
             {apiMode === 'local' ? 'localhost:8000' : 'Cloud Run'}
           </div>
+        </div>
+        <div className="user-section">
+          <div className="user-info">
+            {userPhotoURL ? (
+              <img src={userPhotoURL} alt="" className="user-avatar" />
+            ) : (
+              <div className="user-avatar-placeholder">
+                {userDisplayName?.charAt(0).toUpperCase() || 'U'}
+              </div>
+            )}
+            <div className="user-details">
+              <span className="user-name">{userDisplayName || 'User'}</span>
+              {isDemo && <span className="user-badge demo">Demo</span>}
+            </div>
+          </div>
+          {onSignOut ? (
+            <button className="sign-out-btn" onClick={onSignOut}>
+              Sign Out
+            </button>
+          ) : isDemo && (
+            <Link to="/login" className="sign-in-link">
+              Sign in to save your data
+            </Link>
+          )}
         </div>
       </aside>
 
