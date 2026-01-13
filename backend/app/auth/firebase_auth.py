@@ -14,9 +14,11 @@ from fastapi import Depends, Header, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from firebase_admin import auth
 
-# Initialize Firebase if not already done
-if not firebase_admin._apps:
-    firebase_admin.initialize_app()
+
+def _ensure_firebase_initialized():
+    """Lazy Firebase initialization - only when actually needed for token verification."""
+    if not firebase_admin._apps:
+        firebase_admin.initialize_app()
 
 # HTTP Bearer scheme for Authorization header
 security = HTTPBearer(auto_error=False)
@@ -93,6 +95,7 @@ async def get_current_user(
     token = credentials.credentials
 
     try:
+        _ensure_firebase_initialized()
         decoded_token = auth.verify_id_token(token)
         return FirebaseUser.from_token(decoded_token)
     except auth.InvalidIdTokenError:
@@ -139,6 +142,7 @@ async def get_optional_user(
         return None
 
     try:
+        _ensure_firebase_initialized()
         token = credentials.credentials
         decoded_token = auth.verify_id_token(token)
         return FirebaseUser.from_token(decoded_token)

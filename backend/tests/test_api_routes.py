@@ -14,41 +14,51 @@ from fastapi.testclient import TestClient
 @pytest.fixture
 def mock_services():
     """Mock all service dependencies."""
-    with patch("app.api.routes._repo") as mock_repo, patch(
-        "app.api.routes._service"
-    ) as mock_service, patch("app.api.routes._template_service") as mock_template:
-        mock_repo.list_entities.return_value = []
-        mock_repo.save_entity.side_effect = lambda e: e
+    mock_repo = MagicMock()
+    mock_service = MagicMock()
+    mock_template = MagicMock()
 
-        mock_service.process_upload.return_value = {
-            "job_id": "test-job-123",
-            "status": "processed",
-            "files": ["test.csv"],
-            "created_at": "2024-01-15T00:00:00Z",
-            "summary": {"total_income": 1000, "total_expenses": 500, "net_savings": 500, "entity_counts": {}},
-            "transactions": [],
-            "charts": {},
-            "rules": [],
-            "categories": [],
-            "narrative": "Test narrative",
-        }
+    mock_repo.list_entities.return_value = []
+    mock_repo.save_entity.side_effect = lambda e, user_id=None: e
+    mock_repo.list_jobs.return_value = []
+    mock_repo.delete_job.return_value = True
+    mock_repo.load_job.return_value = None
+    mock_repo.get_categories.return_value = {}
 
-        mock_service.get_job.return_value = {
-            "status": "processed",
-            "summary": {"total_income": 1000, "total_expenses": 500, "net_savings": 500, "entity_counts": {}},
-            "transactions": [],
-            "charts": {},
-            "narrative": "Test narrative",
-        }
+    mock_service.process_upload.return_value = {
+        "job_id": "test-job-123",
+        "status": "processed",
+        "files": ["test.csv"],
+        "created_at": "2024-01-15T00:00:00Z",
+        "summary": {"total_income": 1000, "total_expenses": 500, "net_savings": 500, "entity_counts": {}},
+        "transactions": [],
+        "charts": {},
+        "rules": [],
+        "categories": [],
+        "narrative": "Test narrative",
+    }
 
-        mock_service.inference = MagicMock()
-        mock_service.inference.infer_graph.return_value = (
-            {"entities": [], "relationships": []},
-            "raw",
-        )
+    mock_service.check_duplicates.return_value = None
 
-        mock_template.build_template_bytes.return_value = b"excel content"
+    mock_service.get_job.return_value = {
+        "status": "processed",
+        "summary": {"total_income": 1000, "total_expenses": 500, "net_savings": 500, "entity_counts": {}},
+        "transactions": [],
+        "charts": {},
+        "narrative": "Test narrative",
+    }
 
+    mock_service.inference = MagicMock()
+    mock_service.inference.infer_graph.return_value = (
+        {"entities": [], "relationships": []},
+        "raw",
+    )
+
+    mock_template.build_template_bytes.return_value = b"excel content"
+
+    with patch("app.api.routes.get_repo", return_value=mock_repo), \
+         patch("app.api.routes.get_service", return_value=mock_service), \
+         patch("app.api.routes.get_template_service", return_value=mock_template):
         yield {
             "repo": mock_repo,
             "service": mock_service,
@@ -58,10 +68,13 @@ def mock_services():
 
 @pytest.fixture
 def client(mock_services) -> TestClient:
-    """Create test client with mocked services."""
+    """Create test client with mocked services and demo auth."""
     from app.main import app
 
-    return TestClient(app)
+    client = TestClient(app)
+    # Use demo mode for authentication
+    client.headers["X-Demo-User-Id"] = "test-user"
+    return client
 
 
 class TestHealthEndpoint:

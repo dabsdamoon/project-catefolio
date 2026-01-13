@@ -2,7 +2,15 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import './App.css'
 import InsightsDashboard from './InsightsDashboard'
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000'
+const API_ENDPOINTS = {
+  local: 'http://localhost:8000',
+  cloud: import.meta.env.VITE_API_BASE || 'http://localhost:8000',
+}
+
+const getStoredApiMode = (): 'local' | 'cloud' => {
+  const stored = localStorage.getItem('catefolio_api_mode')
+  return stored === 'cloud' ? 'cloud' : 'local'
+}
 
 // Parse TSV (tab-separated) with columns as categories and rows as keywords
 // Format: First row = category names, following rows = keywords
@@ -56,13 +64,6 @@ const getDemoUserId = (): string => {
 
 const DEMO_USER_ID = getDemoUserId()
 
-// API helper with demo auth header
-const apiFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
-  const headers = new Headers(options.headers)
-  headers.set('X-Demo-User-Id', DEMO_USER_ID)
-  return fetch(url, { ...options, headers })
-}
-
 type Summary = {
   total_income: number
   total_expenses: number
@@ -97,6 +98,21 @@ function Spinner() {
 }
 
 function App() {
+  const [apiMode, setApiMode] = useState<'local' | 'cloud'>(getStoredApiMode)
+  const API_BASE = API_ENDPOINTS[apiMode]
+
+  // API helper with demo auth header
+  const apiFetch = useCallback(async (url: string, options: RequestInit = {}): Promise<Response> => {
+    const headers = new Headers(options.headers)
+    headers.set('X-Demo-User-Id', DEMO_USER_ID)
+    return fetch(url, { ...options, headers })
+  }, [])
+
+  const handleApiModeChange = (mode: 'local' | 'cloud') => {
+    setApiMode(mode)
+    localStorage.setItem('catefolio_api_mode', mode)
+  }
+
   const [status, setStatus] = useState('Upload files to generate the template-formatted report.')
   const [summary, setSummary] = useState<Summary | null>(null)
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -147,7 +163,7 @@ function App() {
     } finally {
       setDashboardLoading(false)
     }
-  }, [])
+  }, [API_BASE, apiFetch])
 
   const handleClearAllData = async () => {
     if (!confirm('Are you sure you want to delete all your transaction data? This cannot be undone.')) {
@@ -195,7 +211,7 @@ function App() {
     } finally {
       setCategoriesLoading(false)
     }
-  }, [])
+  }, [API_BASE, apiFetch])
 
   useEffect(() => {
     if (activeView === 'dashboard') {
@@ -204,7 +220,7 @@ function App() {
     if (activeView === 'categories') {
       loadCategories()
     }
-  }, [activeView, loadDashboardTransactions, loadCategories])
+  }, [activeView, loadDashboardTransactions, loadCategories, apiMode])
 
   const saveCategories = async () => {
     setCategoriesSaving(true)
@@ -673,6 +689,26 @@ function App() {
             Exports
           </button>
         </nav>
+        <div className="api-switcher">
+          <label className="api-switcher-label">API Endpoint</label>
+          <div className="api-switcher-options">
+            <button
+              className={`api-option ${apiMode === 'local' ? 'active' : ''}`}
+              onClick={() => handleApiModeChange('local')}
+            >
+              Local
+            </button>
+            <button
+              className={`api-option ${apiMode === 'cloud' ? 'active' : ''}`}
+              onClick={() => handleApiModeChange('cloud')}
+            >
+              Cloud
+            </button>
+          </div>
+          <div className="api-switcher-url" title={API_BASE}>
+            {apiMode === 'local' ? 'localhost:8000' : 'Cloud Run'}
+          </div>
+        </div>
       </aside>
 
       <main className="main">

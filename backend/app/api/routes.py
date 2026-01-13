@@ -25,9 +25,34 @@ from app.services.transaction_service import TransactionService
 from app.services.template_service import TemplateService
 
 router = APIRouter()
-_repo = FirestoreRepository()
-_service = TransactionService(_repo)
-_template_service = TemplateService(Path(__file__).resolve().parents[3] / "test_template" / "계좌관리_template.xlsx")
+
+# Lazy initialization to avoid Firebase connection at import time (breaks tests)
+_repo: FirestoreRepository | None = None
+_service: TransactionService | None = None
+_template_service: TemplateService | None = None
+
+
+def get_repo() -> FirestoreRepository:
+    global _repo
+    if _repo is None:
+        _repo = FirestoreRepository()
+    return _repo
+
+
+def get_service() -> TransactionService:
+    global _service
+    if _service is None:
+        _service = TransactionService(get_repo())
+    return _service
+
+
+def get_template_service() -> TemplateService:
+    global _template_service
+    if _template_service is None:
+        _template_service = TemplateService(
+            Path(__file__).resolve().parents[3] / "test_template" / "계좌관리_template.xlsx"
+        )
+    return _template_service
 
 
 @router.get("/health")
@@ -56,7 +81,7 @@ async def upload_files(
     # Check for duplicates
     for f in files:
         f.file.seek(0)
-    duplicate = _service.check_duplicates(files, user_id=user.uid)
+    duplicate = get_service().check_duplicates(files, user_id=user.uid)
 
     if duplicate and not force_reprocess:
         # Return existing job info - no need to re-process
@@ -76,7 +101,7 @@ async def upload_files(
     # If force_reprocess and duplicate exists, delete the old one
     overwrite_job_id = duplicate["job_id"] if duplicate and force_reprocess else None
 
-    payload = _service.process_upload(
+    payload = get_service().process_upload(
         files,
         categorize=categorize,
         user_id=user.uid,
@@ -99,7 +124,7 @@ def get_result(
     user: FirebaseUser = Depends(get_current_user),
 ) -> ResultResponse:
     """Get processed transaction results for a job."""
-    job = _service.get_job(job_id, user_id=user.uid)
+    job = get_service().get_job(job_id, user_id=user.uid)
     return ResultResponse(
         job_id=job_id,
         status=job["status"],
@@ -114,7 +139,7 @@ def get_report(
     user: FirebaseUser = Depends(get_current_user),
 ) -> ReportResponse:
     """Get report/narrative for a job."""
-    job = _service.get_job(job_id, user_id=user.uid)
+    job = get_service().get_job(job_id, user_id=user.uid)
     return ReportResponse(
         job_id=job_id,
         status=job["status"],
@@ -132,7 +157,7 @@ def get_visualize(
     user: FirebaseUser = Depends(get_current_user),
 ) -> VisualizationResponse:
     """Get visualization data for a job."""
-    job = _service.get_job(job_id, user_id=user.uid)
+    job = get_service().get_job(job_id, user_id=user.uid)
     return VisualizationResponse(
         job_id=job_id,
         status=job["status"],
@@ -145,7 +170,7 @@ def list_entities(
     user: FirebaseUser = Depends(get_current_user),
 ) -> list[EntityResponse]:
     """List all entities for the current user."""
-    entities = _repo.list_entities(user_id=user.uid)
+    entities = get_repo().list_entities(user_id=user.uid)
     return [EntityResponse(**entity) for entity in entities]
 
 
@@ -162,7 +187,7 @@ def create_entity(
         "description": payload.description,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
-    saved = _repo.save_entity(entity, user_id=user.uid)
+    saved = get_repo().save_entity(entity, user_id=user.uid)
     return EntityResponse(**saved)
 
 
@@ -182,7 +207,7 @@ def infer_graph(
             "memo": payload.memo or "",
         },
     }
-    result, raw_text = _service.inference.infer_graph(transaction, root_context=payload.root_context)
+    result, raw_text = get_service().inference.infer_graph(transaction, root_context=payload.root_context)
     response = GraphInferenceResponse(**result)
     if debug:
         response.raw_text = raw_text
@@ -210,12 +235,12 @@ async def convert_template(
     # Check for duplicates
     for f in files:
         f.file.seek(0)
-    duplicate = _service.check_duplicates(files, user_id=user.uid)
+    duplicate = get_service().check_duplicates(files, user_id=user.uid)
 
     if duplicate and not force_reprocess:
         # Use existing job's transactions for template
-        existing_job = _service.get_job(duplicate["job_id"], user_id=user.uid)
-        template_bytes = _template_service.build_template_bytes(existing_job["transactions"])
+        existing_job = get_service().get_job(duplicate["job_id"], user_id=user.uid)
+        template_bytes = get_template_service().build_template_bytes(existing_job["transactions"])
     else:
         # Reset file positions for processing
         for f in files:
@@ -224,13 +249,13 @@ async def convert_template(
         # If force_reprocess and duplicate exists, delete the old one
         overwrite_job_id = duplicate["job_id"] if duplicate and force_reprocess else None
 
-        payload = _service.process_upload(
+        payload = get_service().process_upload(
             files,
             categorize=categorize,
             user_id=user.uid,
             overwrite_job_id=overwrite_job_id,
         )
-        template_bytes = _template_service.build_template_bytes(payload["transactions"])
+        template_bytes = get_template_service().build_template_bytes(payload["transactions"])
 
     filename = "account_template_output.xlsx"
     return StreamingResponse(
@@ -249,7 +274,7 @@ def get_categories(
     Categories are user-specific if authenticated, otherwise returns defaults.
     """
     user_id = user.uid if user else None
-    data = _repo.get_categories(user_id=user_id)
+    data = get_repo().get_categories(user_id=user_id)
     if not data:
         return []
     return [
@@ -268,7 +293,7 @@ def update_categories(
         cat.id: {"name": cat.name, "keywords": cat.keywords}
         for cat in categories
     }
-    _repo.save_categories(data, user_id=user.uid)
+    get_repo().save_categories(data, user_id=user.uid)
     return categories
 
 
@@ -294,7 +319,7 @@ def list_jobs(
     user: FirebaseUser = Depends(get_current_user),
 ) -> list[dict]:
     """List all jobs for the current user (metadata only, no transactions)."""
-    jobs = _repo.list_jobs(user_id=user.uid)
+    jobs = get_repo().list_jobs(user_id=user.uid)
     return jobs
 
 
@@ -304,7 +329,7 @@ def delete_job(
     user: FirebaseUser = Depends(get_current_user),
 ) -> dict:
     """Delete a specific job and its transactions."""
-    deleted = _repo.delete_job(job_id, user_id=user.uid)
+    deleted = get_repo().delete_job(job_id, user_id=user.uid)
     if not deleted:
         raise HTTPException(status_code=404, detail="Job not found")
     return {"status": "deleted", "job_id": job_id}
@@ -315,11 +340,11 @@ def delete_all_jobs(
     user: FirebaseUser = Depends(get_current_user),
 ) -> dict:
     """Delete all jobs for the current user. Use with caution."""
-    jobs = _repo.list_jobs(user_id=user.uid)
+    jobs = get_repo().list_jobs(user_id=user.uid)
     deleted_count = 0
     for job in jobs:
         job_id = job.get("id")
-        if job_id and _repo.delete_job(job_id, user_id=user.uid):
+        if job_id and get_repo().delete_job(job_id, user_id=user.uid):
             deleted_count += 1
     return {"status": "deleted", "deleted_count": deleted_count}
 
@@ -335,7 +360,7 @@ def get_all_transactions(
     Returns:
         Dictionary with summary and deduplicated transactions list
     """
-    jobs = _repo.list_jobs(user_id=user.uid)
+    jobs = get_repo().list_jobs(user_id=user.uid)
 
     seen_signatures: set[str] = set()
     unique_transactions: list[dict] = []
@@ -346,7 +371,7 @@ def get_all_transactions(
         if not job_id:
             continue
 
-        job = _repo.load_job(job_id, user_id=user.uid)
+        job = get_repo().load_job(job_id, user_id=user.uid)
         if not job:
             continue
 
