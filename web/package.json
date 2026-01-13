@@ -12,7 +12,7 @@
   "dependencies": {
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "react-grab": "file:../../react-grab/packages/react-grab"
+    "react-grab": "^0.0.98"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
