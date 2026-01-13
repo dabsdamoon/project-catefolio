@@ -130,7 +130,21 @@ class TestBuildNarrative:
 class TestApplyCategoryResults:
     """Tests for applying category results."""
 
-    def test_apply_categories(self):
+    @pytest.fixture
+    def mock_service(self):
+        """Create a mock service with categories for testing."""
+        mock_repo = MagicMock()
+        mock_categories = [
+            {"name": "Shopping", "keywords": []},
+            {"name": "Food", "keywords": []},
+            {"name": "Expense", "keywords": []},
+        ]
+        with patch("app.services.transaction_service.InferenceService"), \
+             patch.object(TransactionService, "_load_categories", return_value=mock_categories):
+            service = TransactionService(mock_repo)
+        return service
+
+    def test_apply_categories(self, mock_service):
         transactions = [
             {"category": "Expense", "entity": "Unknown"},
             {"category": "Expense", "entity": "Unknown"},
@@ -139,21 +153,21 @@ class TestApplyCategoryResults:
             {"index": 0, "categories": ["Shopping", "E-commerce"]},
             {"index": 1, "categories": ["Food"]},
         ]
-        TransactionService._apply_category_results(transactions, results)
+        mock_service._apply_category_results(transactions, results)
         # Only the first category is applied (no categories array stored)
         assert transactions[0]["category"] == "Shopping"
         assert transactions[1]["category"] == "Food"
 
-    def test_invalid_index_ignored(self):
+    def test_invalid_index_ignored(self, mock_service):
         transactions = [{"category": "Expense"}]
         results = [{"index": 99, "categories": ["Shopping"]}]
-        TransactionService._apply_category_results(transactions, results)
+        mock_service._apply_category_results(transactions, results)
         assert transactions[0]["category"] == "Expense"  # Unchanged
 
-    def test_empty_categories_ignored(self):
+    def test_empty_categories_ignored(self, mock_service):
         transactions = [{"category": "Expense"}]
         results = [{"index": 0, "categories": []}]
-        TransactionService._apply_category_results(transactions, results)
+        mock_service._apply_category_results(transactions, results)
         assert transactions[0]["category"] == "Expense"  # Unchanged
 
 
