@@ -9,22 +9,48 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 print_usage() {
-    echo -e "${BLUE}Usage:${NC} $0 <component> <version>"
+    echo -e "${BLUE}Usage:${NC} $0 <component> [version]"
     echo "  component: api | web"
     echo "  version: x.y.z (e.g., 1.0.0, 1.1.0)"
     echo ""
     echo "Examples:"
+    echo "  $0 api          # Show previous api versions"
+    echo "  $0 web          # Show previous web versions"
     echo "  $0 api 1.0.0    # Creates tag api-v1.0.0"
-    echo "  $0 web 1.0.0   # Creates tag web-v1.0.0"
+    echo "  $0 web 1.0.0    # Creates tag web-v1.0.0"
 }
 
-if [ $# -ne 2 ]; then
+show_versions() {
+    local component=$1
+    echo -e "${BLUE}Previous ${component} versions:${NC}"
+    local tags=$(git tag -l "${component}-v*" --sort=-version:refname 2>/dev/null)
+    if [ -z "$tags" ]; then
+        echo "  (no previous tags)"
+        echo ""
+        echo -e "${GREEN}Suggested next version:${NC} ${component}-v1.0.0"
+    else
+        echo "$tags" | head -10 | while read tag; do
+            echo "  $tag"
+        done
+        local latest=$(echo "$tags" | head -1)
+        # Extract version number and suggest next patch
+        local version=${latest#${component}-v}
+        local major=$(echo $version | cut -d. -f1)
+        local minor=$(echo $version | cut -d. -f2)
+        local patch=$(echo $version | cut -d. -f3)
+        local next_patch=$((patch + 1))
+        echo ""
+        echo -e "${GREEN}Latest:${NC} $latest"
+        echo -e "${GREEN}Suggested next:${NC} ${component}-v${major}.${minor}.${next_patch}"
+    fi
+}
+
+if [ $# -eq 0 ]; then
     print_usage
     exit 1
 fi
 
 COMPONENT=$1
-VERSION=$2
 
 # Validate component
 if [ "$COMPONENT" != "api" ] && [ "$COMPONENT" != "web" ]; then
@@ -32,6 +58,14 @@ if [ "$COMPONENT" != "api" ] && [ "$COMPONENT" != "web" ]; then
     print_usage
     exit 1
 fi
+
+# If no version provided, show previous versions and exit
+if [ $# -eq 1 ]; then
+    show_versions "$COMPONENT"
+    exit 0
+fi
+
+VERSION=$2
 
 # Validate version format (semver)
 if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
