@@ -1,0 +1,147 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 20px;
+}
+
+.login-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-card {
+  background: white;
+  border-radius: 16px;
+  padding: 48px 40px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+}
+
+.login-header {
+  margin-bottom: 32px;
+}
+
+.login-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.login-logo .logo-badge {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 18px;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.login-logo h1 {
+  font-size: 28px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.login-header p {
+  color: #666;
+  font-size: 14px;
+  margin: 0;
+}
+
+.login-error {
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.google-sign-in-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 24px;
+  background: white;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #3c4043;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.google-sign-in-btn:hover:not(:disabled) {
+  background: #f8f9fa;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.google-sign-in-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.google-sign-in-btn svg {
+  flex-shrink: 0;
+}
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  margin: 24px 0;
+  color: #999;
+  font-size: 13px;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e0e0e0;
+}
+
+.login-divider span {
+  padding: 0 16px;
+}
+
+.demo-link {
+  display: block;
+  padding: 12px 24px;
+  color: #667eea;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.demo-link:hover {
+  background: #f0f0ff;
+}
+
+.app-loading {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f7fa;
+}
