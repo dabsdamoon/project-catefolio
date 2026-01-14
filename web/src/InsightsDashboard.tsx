@@ -3,13 +3,19 @@ import './InsightsDashboard.css'
 
 type Transaction = {
   date: string
-  description: string
+  description: string  // Counterparty (보낸분/받는분)
   amount: number
   category?: string
   entity?: string
+  raw?: {
+    note?: string      // 적요
+    display?: string   // 내 통장 표시
+    memo?: string      // 메모
+  }
 }
 
 type DirectionFilter = 'both' | 'credit' | 'debit'
+type TimeRangePreset = 'all' | '7d' | '30d' | 'month' | 'year' | 'custom'
 
 interface InsightsDashboardProps {
   transactions: Transaction[]
@@ -57,6 +63,9 @@ export default function InsightsDashboard({
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const [hoveredDay, setHoveredDay] = useState<string | null>(null)
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
+  const [timeRange, setTimeRange] = useState<TimeRangePreset>('all')
+  const [customStartDate, setCustomStartDate] = useState('')
+  const [customEndDate, setCustomEndDate] = useState('')
 
   // Compute all categories from transactions
   const allCategories = useMemo(() => {
@@ -66,6 +75,46 @@ export default function InsightsDashboard({
     })
     return Array.from(set).sort()
   }, [transactions])
+
+  // Compute time-filtered transactions
+  const timeFilteredTransactions = useMemo(() => {
+    if (timeRange === 'all') return transactions
+
+    const now = new Date()
+    let startDate: Date
+    let endDate: Date = now
+
+    switch (timeRange) {
+      case '7d':
+        startDate = new Date(now)
+        startDate.setDate(now.getDate() - 7)
+        break
+      case '30d':
+        startDate = new Date(now)
+        startDate.setDate(now.getDate() - 30)
+        break
+      case 'month':
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+        break
+      case 'year':
+        startDate = new Date(now.getFullYear(), 0, 1)
+        break
+      case 'custom':
+        if (!customStartDate && !customEndDate) return transactions
+        startDate = customStartDate ? new Date(customStartDate) : new Date('1900-01-01')
+        endDate = customEndDate ? new Date(customEndDate) : new Date('2100-12-31')
+        break
+      default:
+        return transactions
+    }
+
+    const startStr = startDate.toISOString().split('T')[0]
+    const endStr = endDate.toISOString().split('T')[0]
+
+    return transactions.filter((tx) => {
+      return tx.date >= startStr && tx.date <= endStr
+    })
+  }, [transactions, timeRange, customStartDate, customEndDate])
 
   // KPI Metrics
   const kpis = useMemo(() => {
@@ -77,7 +126,7 @@ export default function InsightsDashboard({
     const creditCategoryTotals = new Map<string, number>()
     const debitCategoryTotals = new Map<string, number>()
 
-    transactions.forEach((tx) => {
+    timeFilteredTransactions.forEach((tx) => {
       const cat = (tx.category || '').trim()
       if (!cat || cat === 'Uncategorized') uncategorizedCount++
 
@@ -94,7 +143,7 @@ export default function InsightsDashboard({
 
     const topCreditCategory = Array.from(creditCategoryTotals.entries()).sort((a, b) => b[1] - a[1])[0]
     const topDebitCategory = Array.from(debitCategoryTotals.entries()).sort((a, b) => b[1] - a[1])[0]
-    const uncategorizedRate = transactions.length > 0 ? (uncategorizedCount / transactions.length) * 100 : 0
+    const uncategorizedRate = timeFilteredTransactions.length > 0 ? (uncategorizedCount / timeFilteredTransactions.length) * 100 : 0
 
     return {
       totalCredit,
@@ -102,24 +151,24 @@ export default function InsightsDashboard({
       net: totalCredit - totalDebit,
       creditCount,
       debitCount,
-      totalCount: transactions.length,
+      totalCount: timeFilteredTransactions.length,
       topCreditCategory: topCreditCategory?.[0] || 'N/A',
       topDebitCategory: topDebitCategory?.[0] || 'N/A',
       uncategorizedRate,
     }
-  }, [transactions])
+  }, [timeFilteredTransactions])
 
-  // Date range
+  // Date range (from filtered transactions)
   const dateRange = useMemo(() => {
-    if (!transactions.length) return { start: '', end: '' }
-    const dates = transactions.map((tx) => tx.date).sort()
+    if (!timeFilteredTransactions.length) return { start: '', end: '' }
+    const dates = timeFilteredTransactions.map((tx) => tx.date).sort()
     return { start: dates[0], end: dates[dates.length - 1] }
-  }, [transactions])
+  }, [timeFilteredTransactions])
 
   // Daily series for chart
   const dailySeries = useMemo(() => {
     const map = new Map<string, { credit: number; debit: number; creditCount: number; debitCount: number }>()
-    transactions.forEach((tx) => {
+    timeFilteredTransactions.forEach((tx) => {
       const bucket = map.get(tx.date) || { credit: 0, debit: 0, creditCount: 0, debitCount: 0 }
       if (tx.amount >= 0) {
         bucket.credit += tx.amount
@@ -135,13 +184,13 @@ export default function InsightsDashboard({
       labels,
       data: labels.map((date) => map.get(date)!),
     }
-  }, [transactions])
+  }, [timeFilteredTransactions])
 
   // Top categories
   const topCategories = useMemo(() => {
     const creditTotals = new Map<string, number>()
     const debitTotals = new Map<string, number>()
-    transactions.forEach((tx) => {
+    timeFilteredTransactions.forEach((tx) => {
       const category = (tx.category || 'Uncategorized').trim() || 'Uncategorized'
       if (tx.amount >= 0) {
         creditTotals.set(category, (creditTotals.get(category) || 0) + tx.amount)
@@ -154,13 +203,13 @@ export default function InsightsDashboard({
         .sort((a, b) => b[1] - a[1])
         .slice(0, 6)
     return { credit: toSorted(creditTotals), debit: toSorted(debitTotals) }
-  }, [transactions])
+  }, [timeFilteredTransactions])
 
   // Top counterparties
   const topCounterparties = useMemo(() => {
     const creditTotals = new Map<string, { total: number; count: number }>()
     const debitTotals = new Map<string, { total: number; count: number }>()
-    transactions.forEach((tx) => {
+    timeFilteredTransactions.forEach((tx) => {
       const key = tx.description || 'Unknown'
       if (tx.amount >= 0) {
         const existing = creditTotals.get(key) || { total: 0, count: 0 }
@@ -175,11 +224,11 @@ export default function InsightsDashboard({
         .sort((a, b) => b[1].total - a[1].total)
         .slice(0, 6)
     return { credit: toSorted(creditTotals), debit: toSorted(debitTotals) }
-  }, [transactions])
+  }, [timeFilteredTransactions])
 
   // Filtered transactions for explorer
   const filteredTransactions = useMemo(() => {
-    let result = transactions.filter((tx) => {
+    let result = timeFilteredTransactions.filter((tx) => {
       // Direction filter
       if (direction === 'credit' && tx.amount < 0) return false
       if (direction === 'debit' && tx.amount >= 0) return false
@@ -192,7 +241,7 @@ export default function InsightsDashboard({
       // Search filter
       if (searchQuery.trim()) {
         const needle = searchQuery.toLowerCase()
-        const haystack = `${tx.description} ${tx.category || ''}`.toLowerCase()
+        const haystack = `${tx.description} ${tx.category || ''} ${tx.raw?.display || ''} ${tx.raw?.note || ''} ${tx.raw?.memo || ''}`.toLowerCase()
         if (!haystack.includes(needle)) return false
       }
 
@@ -213,7 +262,7 @@ export default function InsightsDashboard({
     })
 
     return result
-  }, [transactions, direction, selectedCategory, searchQuery, selectedDay, sortField, sortDir])
+  }, [timeFilteredTransactions, direction, selectedCategory, searchQuery, selectedDay, sortField, sortDir])
 
   const explorerPageCount = Math.ceil(filteredTransactions.length / EXPLORER_PAGE_SIZE)
   const explorerItems = filteredTransactions.slice(
@@ -259,6 +308,9 @@ export default function InsightsDashboard({
     setSelectedCategory('All')
     setSearchQuery('')
     setSelectedDay(null)
+    setTimeRange('all')
+    setCustomStartDate('')
+    setCustomEndDate('')
     setExplorerPage(0)
   }
 
@@ -318,7 +370,7 @@ export default function InsightsDashboard({
     })
   }, [chartData, plotHeight])
 
-  const hasActiveFilters = direction !== 'both' || selectedCategory !== 'All' || searchQuery || selectedDay
+  const hasActiveFilters = direction !== 'both' || selectedCategory !== 'All' || searchQuery || selectedDay || timeRange !== 'all'
 
   if (error) {
     return (
@@ -361,6 +413,24 @@ export default function InsightsDashboard({
     )
   }
 
+  if (transactions.length > 0 && !timeFilteredTransactions.length) {
+    return (
+      <div className="insights-empty">
+        <div className="insights-empty-icon">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 6v6l4 2" />
+          </svg>
+        </div>
+        <h3>No Transactions in Selected Period</h3>
+        <p>Try adjusting your time range filter to see more data.</p>
+        <button className="insights-clear-btn" onClick={clearFilters} style={{ marginTop: '16px' }}>
+          Clear Time Filter
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div className="insights-dashboard">
       {/* Header */}
@@ -395,6 +465,53 @@ export default function InsightsDashboard({
 
       {/* Filter Bar */}
       <section className="insights-filters">
+        <div className="insights-filter-field time-range">
+          <label>Time Range</label>
+          <select
+            value={timeRange}
+            onChange={(e) => {
+              setTimeRange(e.target.value as TimeRangePreset)
+              setExplorerPage(0)
+            }}
+          >
+            <option value="all">All Time</option>
+            <option value="7d">Last 7 Days</option>
+            <option value="30d">Last 30 Days</option>
+            <option value="month">This Month</option>
+            <option value="year">This Year</option>
+            <option value="custom">Custom Range</option>
+          </select>
+        </div>
+
+        {timeRange === 'custom' && (
+          <div className="insights-custom-date-range">
+            <div className="insights-filter-field date">
+              <label>From</label>
+              <input
+                type="date"
+                value={customStartDate}
+                onChange={(e) => {
+                  setCustomStartDate(e.target.value)
+                  setExplorerPage(0)
+                }}
+              />
+            </div>
+            <div className="insights-filter-field date">
+              <label>To</label>
+              <input
+                type="date"
+                value={customEndDate}
+                onChange={(e) => {
+                  setCustomEndDate(e.target.value)
+                  setExplorerPage(0)
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        <div className="insights-filter-divider" />
+
         <div className="insights-direction-toggle">
           {(['both', 'credit', 'debit'] as const).map((d) => (
             <button
@@ -733,6 +850,7 @@ export default function InsightsDashboard({
                   Date
                   {sortField === 'date' && <span className="sort-indicator">{sortDir === 'asc' ? '↑' : '↓'}</span>}
                 </th>
+                <th>Counterparty</th>
                 <th>Description</th>
                 <th>Direction</th>
                 <th className="sortable" onClick={() => handleSort('amount')}>
@@ -745,10 +863,13 @@ export default function InsightsDashboard({
             <tbody>
               {explorerItems.map((tx, idx) => {
                 const isCredit = tx.amount >= 0
+                // Get description from raw fields: display > note > memo
+                const txDescription = tx.raw?.display || tx.raw?.note || tx.raw?.memo || ''
                 return (
                   <tr key={`${tx.date}-${idx}`} className={isCredit ? 'row-credit' : 'row-debit'}>
                     <td className="cell-date">{tx.date}</td>
-                    <td className="cell-desc">{tx.description}</td>
+                    <td className="cell-counterparty">{tx.description}</td>
+                    <td className="cell-desc">{txDescription}</td>
                     <td className="cell-direction">
                       <span className={`direction-badge ${isCredit ? 'credit' : 'debit'}`}>
                         {isCredit ? 'Credit' : 'Debit'}

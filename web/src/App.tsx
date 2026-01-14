@@ -2,6 +2,8 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import { Link } from 'react-router'
 import './App.css'
 import InsightsDashboard from './InsightsDashboard'
+import { TeamProvider } from './team/TeamContext'
+import TeamPage from './team/TeamPage'
 
 const getStoredApiMode = (): 'local' | 'cloud' => {
   const stored = localStorage.getItem('catefolio_api_mode')
@@ -79,7 +81,7 @@ type Category = {
   keywords: string[]
 }
 
-type NavView = 'dashboard' | 'upload' | 'categories' | 'exports'
+type NavView = 'dashboard' | 'upload' | 'categories' | 'exports' | 'team'
 
 function Spinner() {
   return (
@@ -638,7 +640,7 @@ function App({ apiFetch, apiEndpoints, isDemo, userDisplayName, userPhotoURL, on
     debitEntries[date] = grouped[date]?.debit || []
   })
 
-  return (
+  const content = (
     <div className="app-root">
       <aside className="sidebar">
         <div className="logo">
@@ -672,6 +674,12 @@ function App({ apiFetch, apiEndpoints, isDemo, userDisplayName, userPhotoURL, on
             onClick={() => setActiveView('exports')}
           >
             Exports
+          </button>
+          <button
+            className={`nav-item ${activeView === 'team' ? 'active' : ''}`}
+            onClick={() => setActiveView('team')}
+          >
+            Team
           </button>
         </nav>
         <div className="api-switcher">
@@ -1168,8 +1176,18 @@ function App({ apiFetch, apiEndpoints, isDemo, userDisplayName, userPhotoURL, on
             <div className="table-empty">Exports feature is under development.</div>
           </section>
         )}
+
+        {activeView === 'team' && (
+          <TeamPage />
+        )}
       </main>
     </div>
+  )
+
+  return (
+    <TeamProvider apiFetch={apiFetch} apiBaseUrl={API_BASE}>
+      {content}
+    </TeamProvider>
   )
 }
 

@@ -6,6 +6,7 @@ import ProtectedRoute from './auth/ProtectedRoute'
 import LoginPage from './pages/LoginPage'
 import DemoApp from './pages/DemoApp'
 import AuthenticatedApp from './pages/AuthenticatedApp'
+import JoinTeamWrapper from './pages/JoinTeamWrapper'
 import './index.css'
 
 createRoot(document.getElementById('root')!).render(
@@ -15,6 +16,14 @@ createRoot(document.getElementById('root')!).render(
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/demo" element={<DemoApp />} />
+          <Route
+            path="/join/:inviteCode"
+            element={
+              <ProtectedRoute>
+                <JoinTeamWrapper />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/*"
             element={
