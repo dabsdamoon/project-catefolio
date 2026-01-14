@@ -5,7 +5,8 @@
       "Bash(python3 -m json.tool:*)",
       "Bash(npm run build:*)",
       "Skill(pr-creator)",
-      "Skill(frontend-design)"
+      "Skill(frontend-design)",
+      "Bash(wc:*)"
     ]
   }
 }

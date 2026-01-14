@@ -210,9 +210,31 @@
   min-width: 180px;
 }
 
+.insights-filter-field.time-range {
+  min-width: 140px;
+}
+
+.insights-filter-field.date {
+  min-width: 130px;
+}
+
 .insights-filter-field.search {
   flex: 1;
   max-width: 280px;
+}
+
+.insights-custom-date-range {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.insights-filter-divider {
+  width: 1px;
+  height: 40px;
+  background: #e4e7ec;
+  margin: 0 8px;
+  align-self: flex-end;
 }
 
 .insights-filter-field label {
@@ -877,11 +899,20 @@
   white-space: nowrap;
 }
 
-.cell-desc {
-  max-width: 200px;
+.cell-counterparty {
+  max-width: 150px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-weight: 500;
+}
+
+.cell-desc {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-ink-subtle);
 }
 
 .cell-amount {
@@ -1037,6 +1068,20 @@
 
   .insights-filter-field.search {
     max-width: 100%;
+  }
+
+  .insights-filter-field.time-range,
+  .insights-filter-field.date {
+    min-width: 100%;
+  }
+
+  .insights-custom-date-range {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .insights-filter-divider {
+    display: none;
   }
 
   .insights-kpis {

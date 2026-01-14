@@ -67,14 +67,32 @@ def mock_services():
 
 
 @pytest.fixture
-def client(mock_services) -> TestClient:
+def mock_team_repo():
+    """Mock TeamRepository for testing without GCP credentials."""
+    mock_repo = MagicMock()
+    mock_repo.get_user_membership.return_value = None
+    mock_repo.get_team.return_value = None
+    mock_repo.list_team_members.return_value = []
+    mock_repo.list_team_invites.return_value = []
+    return mock_repo
+
+
+@pytest.fixture
+def client(mock_services, mock_team_repo) -> TestClient:
     """Create test client with mocked services and demo auth."""
     from app.main import app
+    from app.repositories.team_repo import get_team_repo
+
+    # Override team repo dependency to avoid GCP credential requirement
+    app.dependency_overrides[get_team_repo] = lambda: mock_team_repo
 
     client = TestClient(app)
     # Use demo mode for authentication
     client.headers["X-Demo-User-Id"] = "test-user"
-    return client
+    yield client
+
+    # Clean up override
+    app.dependency_overrides.pop(get_team_repo, None)
 
 
 class TestHealthEndpoint:
