@@ -163,6 +163,32 @@ class FirestoreRepository:
         )
         return [doc.to_dict() | {"id": doc.id} for doc in query.stream()]
 
+    def list_jobs_for_users(self, user_ids: list[str]) -> list[dict[str, Any]]:
+        """
+        List all jobs for multiple users (team data access).
+
+        Firestore 'in' query supports up to 30 values, so we batch for larger teams.
+
+        Args:
+            user_ids: List of user IDs
+
+        Returns:
+            List of job documents (without transactions for performance)
+        """
+        if not user_ids:
+            return []
+
+        all_jobs = []
+        # Firestore 'in' query limited to 30 values
+        for i in range(0, len(user_ids), 30):
+            batch_ids = user_ids[i:i + 30]
+            query = self.db.collection(self.jobs_collection).where(
+                filter=FieldFilter("user_id", "in", batch_ids)
+            )
+            all_jobs.extend([doc.to_dict() | {"id": doc.id} for doc in query.stream()])
+
+        return all_jobs
+
     def get_all_transaction_signatures(self, user_id: str) -> set[str]:
         """
         Get all transaction signatures for a user across all jobs.
@@ -310,6 +336,30 @@ class FirestoreRepository:
         else:
             # Backward compatibility: return all entities
             return [doc.to_dict() for doc in self.db.collection(self.entities_collection).stream()]
+
+    def list_entities_for_users(self, user_ids: list[str]) -> list[dict[str, Any]]:
+        """
+        List all entities for multiple users (team data access).
+
+        Args:
+            user_ids: List of user IDs
+
+        Returns:
+            List of entity documents
+        """
+        if not user_ids:
+            return []
+
+        all_entities = []
+        # Firestore 'in' query limited to 30 values
+        for i in range(0, len(user_ids), 30):
+            batch_ids = user_ids[i:i + 30]
+            query = self.db.collection(self.entities_collection).where(
+                filter=FieldFilter("user_id", "in", batch_ids)
+            )
+            all_entities.extend([doc.to_dict() for doc in query.stream()])
+
+        return all_entities
 
     def get_entity(
         self,

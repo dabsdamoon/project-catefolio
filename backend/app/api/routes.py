@@ -10,6 +10,7 @@ from fastapi.responses import StreamingResponse
 from app.auth.firebase_auth import FirebaseUser, get_current_user, get_optional_user
 from app.core.utils import transaction_signature
 from app.repositories.firestore_repo import FirestoreRepository
+from app.repositories.team_repo import TeamRepository, get_team_repo
 from app.schemas.models import (
     CategoryItem,
     EntityCreate,
@@ -53,6 +54,19 @@ def get_template_service() -> TemplateService:
             Path(__file__).resolve().parents[3] / "test_template" / "계좌관리_template.xlsx"
         )
     return _template_service
+
+
+def get_data_scope_user_ids(user: FirebaseUser, team_repo: TeamRepository) -> list[str]:
+    """
+    Get the list of user_ids that the current user can access.
+
+    - If user is in a team: returns all team member user_ids
+    - If solo: returns just the user's own user_id
+    """
+    membership = team_repo.get_user_membership(user.uid)
+    if membership and membership.get("status") == "active":
+        return team_repo.get_team_member_ids(membership["team_id"])
+    return [user.uid]
 
 
 @router.get("/health")
@@ -168,9 +182,14 @@ def get_visualize(
 @router.get("/entities", response_model=list[EntityResponse])
 def list_entities(
     user: FirebaseUser = Depends(get_current_user),
+    team_repo: TeamRepository = Depends(get_team_repo),
 ) -> list[EntityResponse]:
-    """List all entities for the current user."""
-    entities = get_repo().list_entities(user_id=user.uid)
+    """List all entities for the current user or team."""
+    user_ids = get_data_scope_user_ids(user, team_repo)
+    if len(user_ids) == 1:
+        entities = get_repo().list_entities(user_id=user_ids[0])
+    else:
+        entities = get_repo().list_entities_for_users(user_ids)
     return [EntityResponse(**entity) for entity in entities]
 
 
@@ -314,12 +333,78 @@ def get_current_user_info(
     }
 
 
+@router.delete("/me")
+def delete_account(
+    user: FirebaseUser = Depends(get_current_user),
+    team_repo: TeamRepository = Depends(get_team_repo),
+) -> dict:
+    """Delete all user data (jobs, entities, categories) and leave any team.
+
+    WARNING: This action is irreversible. All user data will be permanently deleted.
+    """
+    deleted_jobs = 0
+    deleted_entities = 0
+
+    # Delete all jobs for this user
+    jobs = get_repo().list_jobs(user_id=user.uid)
+    for job in jobs:
+        job_id = job.get("id")
+        if job_id and get_repo().delete_job(job_id, user_id=user.uid):
+            deleted_jobs += 1
+
+    # Delete all entities for this user
+    entities = get_repo().list_entities(user_id=user.uid)
+    for entity in entities:
+        entity_id = entity.get("id")
+        if entity_id and get_repo().delete_entity(entity_id, user_id=user.uid):
+            deleted_entities += 1
+
+    # Delete user's categories
+    get_repo().db.collection(get_repo().categories_collection).document(user.uid).delete()
+
+    # Leave team if in one
+    left_team = False
+    membership = team_repo.get_user_membership(user.uid)
+    if membership:
+        team = team_repo.get_team(membership["team_id"])
+        if team:
+            # If owner with other members, transfer ownership first
+            if team["owner_id"] == user.uid:
+                members = team_repo.list_team_members(team["id"])
+                other_members = [m for m in members if m["user_id"] != user.uid]
+                if other_members:
+                    # Transfer to first other member
+                    new_owner = other_members[0]
+                    team_repo.update_team(team["id"], {"owner_id": new_owner["user_id"]})
+                    if new_owner["role"] != "admin":
+                        team_repo.update_member_role(team["id"], new_owner["user_id"], "admin")
+                else:
+                    # Last member, delete team
+                    team_repo.delete_team(team["id"])
+                    left_team = True
+            if not left_team:
+                team_repo.remove_member(team["id"], user.uid)
+                left_team = True
+
+    return {
+        "status": "deleted",
+        "deleted_jobs": deleted_jobs,
+        "deleted_entities": deleted_entities,
+        "left_team": left_team,
+    }
+
+
 @router.get("/jobs")
 def list_jobs(
     user: FirebaseUser = Depends(get_current_user),
+    team_repo: TeamRepository = Depends(get_team_repo),
 ) -> list[dict]:
-    """List all jobs for the current user (metadata only, no transactions)."""
-    jobs = get_repo().list_jobs(user_id=user.uid)
+    """List all jobs for the current user or team (metadata only, no transactions)."""
+    user_ids = get_data_scope_user_ids(user, team_repo)
+    if len(user_ids) == 1:
+        jobs = get_repo().list_jobs(user_id=user_ids[0])
+    else:
+        jobs = get_repo().list_jobs_for_users(user_ids)
     return jobs
 
 
@@ -338,13 +423,20 @@ def delete_job(
 @router.delete("/jobs")
 def delete_all_jobs(
     user: FirebaseUser = Depends(get_current_user),
+    team_repo: TeamRepository = Depends(get_team_repo),
 ) -> dict:
-    """Delete all jobs for the current user. Use with caution."""
-    jobs = get_repo().list_jobs(user_id=user.uid)
+    """Delete all jobs for the current user or team. Use with caution."""
+    user_ids = get_data_scope_user_ids(user, team_repo)
+    if len(user_ids) == 1:
+        jobs = get_repo().list_jobs(user_id=user_ids[0])
+    else:
+        jobs = get_repo().list_jobs_for_users(user_ids)
     deleted_count = 0
     for job in jobs:
         job_id = job.get("id")
-        if job_id and get_repo().delete_job(job_id, user_id=user.uid):
+        job_owner = job.get("user_id")
+        # Only delete if user owns the job or is in the same team
+        if job_id and job_owner in user_ids and get_repo().delete_job(job_id, user_id=job_owner):
             deleted_count += 1
     return {"status": "deleted", "deleted_count": deleted_count}
 
@@ -352,15 +444,20 @@ def delete_all_jobs(
 @router.get("/transactions")
 def get_all_transactions(
     user: FirebaseUser = Depends(get_current_user),
+    team_repo: TeamRepository = Depends(get_team_repo),
 ) -> dict:
-    """Get all transactions across all jobs for the current user (deduplicated).
+    """Get all transactions across all jobs for the current user or team (deduplicated).
 
     Transactions are deduplicated based on date + description + amount signature.
 
     Returns:
         Dictionary with summary and deduplicated transactions list
     """
-    jobs = get_repo().list_jobs(user_id=user.uid)
+    user_ids = get_data_scope_user_ids(user, team_repo)
+    if len(user_ids) == 1:
+        jobs = get_repo().list_jobs(user_id=user_ids[0])
+    else:
+        jobs = get_repo().list_jobs_for_users(user_ids)
 
     seen_signatures: set[str] = set()
     unique_transactions: list[dict] = []
@@ -368,10 +465,11 @@ def get_all_transactions(
 
     for job_meta in jobs:
         job_id = job_meta.get("id")
+        job_owner = job_meta.get("user_id")
         if not job_id:
             continue
 
-        job = get_repo().load_job(job_id, user_id=user.uid)
+        job = get_repo().load_job(job_id, user_id=job_owner)
         if not job:
             continue
 

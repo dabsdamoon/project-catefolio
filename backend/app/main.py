@@ -1,9 +1,17 @@
 import os
+from pathlib import Path
 
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import router as api_router
+from app.api.team_routes import router as team_router
+
+# Load environment variables from .env file in project root
+# backend/app/main.py -> backend -> project root
+env_path = Path(__file__).resolve().parents[2] / ".env"
+load_dotenv(env_path)
 
 app = FastAPI(title="Catefolio API", version="0.1.0")
 
@@ -48,3 +56,4 @@ app.add_middleware(
 )
 
 app.include_router(api_router)
+app.include_router(team_router)
