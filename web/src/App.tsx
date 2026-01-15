@@ -6,6 +6,11 @@ import { TeamProvider } from './team/TeamContext'
 import TeamPage from './team/TeamPage'
 
 const getStoredApiMode = (): 'local' | 'cloud' => {
+  // In production, always use cloud (API switcher is hidden)
+  if (import.meta.env.PROD) {
+    return 'cloud'
+  }
+  // In development, check localStorage for user preference
   const stored = localStorage.getItem('catefolio_api_mode')
   return stored === 'cloud' ? 'cloud' : 'local'
 }
@@ -682,26 +687,29 @@ function App({ apiFetch, apiEndpoints, isDemo, userDisplayName, userPhotoURL, on
             Team
           </button>
         </nav>
-        <div className="api-switcher">
-          <label className="api-switcher-label">API Endpoint</label>
-          <div className="api-switcher-options">
-            <button
-              className={`api-option ${apiMode === 'local' ? 'active' : ''}`}
-              onClick={() => handleApiModeChange('local')}
-            >
-              Local
-            </button>
-            <button
-              className={`api-option ${apiMode === 'cloud' ? 'active' : ''}`}
-              onClick={() => handleApiModeChange('cloud')}
-            >
-              Cloud
-            </button>
+        {/* API Switcher - only show in development (hidden in production) */}
+        {import.meta.env.DEV && (
+          <div className="api-switcher">
+            <label className="api-switcher-label">API Endpoint</label>
+            <div className="api-switcher-options">
+              <button
+                className={`api-option ${apiMode === 'local' ? 'active' : ''}`}
+                onClick={() => handleApiModeChange('local')}
+              >
+                Local
+              </button>
+              <button
+                className={`api-option ${apiMode === 'cloud' ? 'active' : ''}`}
+                onClick={() => handleApiModeChange('cloud')}
+              >
+                Cloud
+              </button>
+            </div>
+            <div className="api-switcher-url" title={API_BASE}>
+              {apiMode === 'local' ? 'localhost:8000' : 'Cloud Run'}
+            </div>
           </div>
-          <div className="api-switcher-url" title={API_BASE}>
-            {apiMode === 'local' ? 'localhost:8000' : 'Cloud Run'}
-          </div>
-        </div>
+        )}
         <div className="user-section">
           <div className="user-info">
             {userPhotoURL ? (

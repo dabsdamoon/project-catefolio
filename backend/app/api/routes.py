@@ -50,8 +50,9 @@ def get_service() -> TransactionService:
 def get_template_service() -> TemplateService:
     global _template_service
     if _template_service is None:
+        # parents[2] = backend/ locally, /app/ in Docker
         _template_service = TemplateService(
-            Path(__file__).resolve().parents[3] / "test_template" / "계좌관리_template.xlsx"
+            Path(__file__).resolve().parents[2] / "template" / "계좌관리_template.xlsx"
         )
     return _template_service
 
