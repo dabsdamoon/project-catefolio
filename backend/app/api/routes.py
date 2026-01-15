@@ -80,6 +80,7 @@ async def upload_files(
     categorize: bool = False,
     force_reprocess: bool = False,
     user: FirebaseUser = Depends(get_current_user),
+    team_repo: TeamRepository = Depends(get_team_repo),
 ) -> UploadResponse:
     """Upload and process transaction files.
 
@@ -88,10 +89,15 @@ async def upload_files(
         categorize: Whether to run AI categorization (default: False, as it's in testing)
         force_reprocess: If True, delete existing duplicate and re-process
         user: Authenticated user (from Firebase Auth or demo mode)
+        team_repo: Team repository for membership lookup
 
     Returns:
         UploadResponse with job info. Returns existing job if duplicate found.
     """
+    # Get user's team for category lookup
+    membership = team_repo.get_user_membership(user.uid)
+    team_id = membership.get("team_id") if membership else None
+
     # Check for duplicates
     for f in files:
         f.file.seek(0)
@@ -119,6 +125,7 @@ async def upload_files(
         files,
         categorize=categorize,
         user_id=user.uid,
+        team_id=team_id,
         overwrite_job_id=overwrite_job_id,
     )
     return UploadResponse(
@@ -239,6 +246,7 @@ async def convert_template(
     categorize: bool = False,
     force_reprocess: bool = False,
     user: FirebaseUser = Depends(get_current_user),
+    team_repo: TeamRepository = Depends(get_team_repo),
 ) -> StreamingResponse:
     """Convert transaction files to Excel template format.
 
@@ -247,10 +255,15 @@ async def convert_template(
         categorize: Whether to run AI categorization (default: False)
         force_reprocess: If True, delete existing duplicate and re-process
         user: Authenticated user
+        team_repo: Team repository for membership lookup
 
     Returns:
         Excel file. If duplicate found, returns template from existing job data.
     """
+    # Get user's team for category lookup
+    membership = team_repo.get_user_membership(user.uid)
+    team_id = membership.get("team_id") if membership else None
+
     # Check for duplicates
     for f in files:
         f.file.seek(0)
@@ -272,6 +285,7 @@ async def convert_template(
             files,
             categorize=categorize,
             user_id=user.uid,
+            team_id=team_id,
             overwrite_job_id=overwrite_job_id,
         )
         template_bytes = get_template_service().build_template_bytes(payload["transactions"])
@@ -287,13 +301,20 @@ async def convert_template(
 @router.get("/categories", response_model=list[CategoryItem])
 def get_categories(
     user: Optional[FirebaseUser] = Depends(get_optional_user),
+    team_repo: TeamRepository = Depends(get_team_repo),
 ) -> list[CategoryItem]:
     """Get all expense categories with their keywords.
 
-    Categories are user-specific if authenticated, otherwise returns defaults.
+    Categories are team-based if user is in a team, otherwise user-specific or defaults.
+    Priority: team_id > user_id > default
     """
-    user_id = user.uid if user else None
-    data = get_repo().get_categories(user_id=user_id)
+    lookup_id = None
+    if user:
+        # Check if user is in a team
+        membership = team_repo.get_user_membership(user.uid)
+        lookup_id = membership.get("team_id") if membership else user.uid
+
+    data = get_repo().get_categories(user_id=lookup_id)
     if not data:
         return []
     return [
@@ -306,13 +327,22 @@ def get_categories(
 def update_categories(
     categories: list[CategoryItem],
     user: FirebaseUser = Depends(get_current_user),
+    team_repo: TeamRepository = Depends(get_team_repo),
 ) -> list[CategoryItem]:
-    """Update expense categories with their keywords for the current user."""
+    """Update expense categories with their keywords.
+
+    Categories are saved to team if user is in a team, otherwise to user.
+    All team members can edit the same category document.
+    """
+    # Check if user is in a team
+    membership = team_repo.get_user_membership(user.uid)
+    save_id = membership.get("team_id") if membership else user.uid
+
     data = {
         cat.id: {"name": cat.name, "keywords": cat.keywords}
         for cat in categories
     }
-    get_repo().save_categories(data, user_id=user.uid)
+    get_repo().save_categories(data, user_id=save_id)
     return categories
 
 

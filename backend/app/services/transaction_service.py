@@ -76,6 +76,7 @@ class TransactionService:
         files: list[UploadFile],
         categorize: bool = False,
         user_id: str | None = None,
+        team_id: str | None = None,
         overwrite_job_id: str | None = None,
     ) -> dict[str, Any]:
         """Process uploaded transaction files with deduplication.
@@ -84,6 +85,7 @@ class TransactionService:
             files: List of uploaded files to process
             categorize: Whether to run AI categorization (default: False)
             user_id: Owner's user ID for multi-tenant isolation
+            team_id: User's team ID for team-based category lookup
             overwrite_job_id: If provided, delete this job before creating new one
         """
         if len(files) > self.MAX_FILES_PER_UPLOAD:
@@ -147,13 +149,44 @@ class TransactionService:
         job_id = str(uuid4())
         logger.info(f"Created job {job_id} with {len(transactions)} total transactions")
 
-        if categorize and self.categories:
-            logger.info(f"AI categorization enabled - inferring categories for {len(transactions)} transactions")
-            category_results, _ = self.inference.infer_categories(transactions, self.categories)
-            self._apply_category_results(transactions, category_results)
-            logger.info(f"Applied {len(category_results)} category results")
-        else:
-            logger.info("AI categorization disabled - skipping LLM calls")
+        # Load categories from Firestore (team-specific, user-specific, or default)
+        # Priority: team_id > user_id > default
+        categories = self._get_categories_for_user(user_id, team_id)
+
+        # Step 1: Always apply keyword-based categorization (free, no LLM cost)
+        keyword_matched: set[int] = set()
+        if categories:
+            keyword_matched = self._apply_keyword_categories(transactions, categories)
+            if keyword_matched:
+                logger.info(f"Keyword matching: {len(keyword_matched)}/{len(transactions)} transactions matched")
+
+        # Step 2: Only send unmatched transactions to LLM if AI categorization is enabled
+        if categorize and categories:
+            unmatched_transactions = [
+                (idx, tx) for idx, tx in enumerate(transactions)
+                if idx not in keyword_matched
+            ]
+
+            if unmatched_transactions:
+                logger.info(f"AI categorization enabled for {len(unmatched_transactions)} unmatched transactions")
+                # Create a list for LLM with original indices preserved
+                unmatched_list = [tx for _, tx in unmatched_transactions]
+                idx_mapping = [idx for idx, _ in unmatched_transactions]
+
+                category_results, _ = self.inference.infer_categories(unmatched_list, categories)
+
+                # Remap results back to original indices
+                remapped_results = [
+                    {"index": idx_mapping[r["index"]], "categories": r["categories"]}
+                    for r in category_results
+                    if 0 <= r.get("index", -1) < len(idx_mapping)
+                ]
+                self._apply_category_results(transactions, remapped_results, categories)
+                logger.info(f"LLM categorization: {len(category_results)} results for {len(unmatched_list)} transactions")
+            else:
+                logger.info("All transactions matched by keywords - skipping LLM")
+        elif not categorize:
+            logger.info("AI categorization disabled - keyword matching only")
 
         summary = self._build_summary(transactions)
         charts = self._build_charts(transactions)
@@ -165,8 +198,8 @@ class TransactionService:
             "summary": summary,
             "transactions": transactions,
             "charts": charts,
-            "categories": [cat["name"] for cat in self.categories],
-            "categorized": categorize and bool(self.categories),
+            "categories": [cat["name"] for cat in categories] if categories else [],
+            "categorized": categorize and bool(categories),
             "narrative": self._build_narrative(summary),
             "content_signature": content_signature,
             "duplicates_skipped": duplicates_skipped,
@@ -461,27 +494,82 @@ class TransactionService:
             "Review the category breakdown to spot the largest cost drivers."
         )
 
+    def _apply_keyword_categories(
+        self,
+        transactions: list[dict[str, Any]],
+        categories: list[dict[str, Any]],
+    ) -> set[int]:
+        """Apply categories based on keyword matching.
+
+        First matching category becomes the primary category.
+        Additional matching categories are stored in the 'entity' field
+        as a comma-separated list for reference.
+
+        Args:
+            transactions: List of transaction dicts to categorize
+            categories: List of category dicts with 'name' and 'keywords' fields
+
+        Returns:
+            Set of transaction indices that were matched by keywords
+        """
+        matched_indices: set[int] = set()
+
+        for idx, tx in enumerate(transactions):
+            # Build searchable text from transaction
+            search_text = " ".join([
+                tx.get("description", ""),
+                tx.get("raw", {}).get("note", ""),
+                tx.get("raw", {}).get("display", ""),
+                tx.get("raw", {}).get("memo", ""),
+            ]).lower()
+
+            # Collect ALL matching categories
+            matched_categories: list[str] = []
+            for category in categories:
+                keywords = category.get("keywords", [])
+                for keyword in keywords:
+                    if keyword.lower() in search_text:
+                        matched_categories.append(category["name"])
+                        break  # Found match for this category, move to next
+
+            if matched_categories:
+                # First match becomes primary category
+                tx["category"] = matched_categories[0]
+                matched_indices.add(idx)
+
+                # Additional matches stored in entity field
+                if len(matched_categories) > 1:
+                    tx["entity"] = ", ".join(matched_categories[1:])
+
+        return matched_indices
+
     def _apply_category_results(
         self,
         transactions: list[dict[str, Any]],
         results: list[dict[str, Any]],
+        categories: list[dict[str, Any]],
     ) -> None:
         """Apply AI-predicted category to transactions.
 
         Sets only the primary category (first prediction from AI).
         Entity field is reserved for GraphRAG feature.
         Validates that returned categories are in the allowed list.
+
+        Args:
+            transactions: List of transaction dicts to update
+            results: AI categorization results with 'index' and 'categories'
+            categories: Valid category list to validate against
         """
-        valid_category_names = {cat["name"] for cat in self.categories}
+        valid_category_names = {cat["name"] for cat in categories}
 
         for result in results:
             index = result.get("index", -1)
-            categories = result.get("categories", [])
-            if isinstance(categories, str):
-                categories = [categories]
-            if 0 <= index < len(transactions) and categories:
+            predicted_categories = result.get("categories", [])
+            if isinstance(predicted_categories, str):
+                predicted_categories = [predicted_categories]
+            if 0 <= index < len(transactions) and predicted_categories:
                 # Validate category against allowed list
-                category = categories[0]
+                category = predicted_categories[0]
                 if category in valid_category_names:
                     transactions[index]["category"] = category
                 else:
@@ -537,4 +625,56 @@ class TransactionService:
                         categories.append({"name": name, "keywords": []})
 
         logger.debug(f"Loaded {len(categories)} categories from {path}")
+        return categories
+
+    def _get_categories_for_user(
+        self,
+        user_id: str | None,
+        team_id: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """Load categories from Firestore for the user/team.
+
+        Firestore stores categories in dict format with category IDs as keys:
+            {"CAT_001": {"name": "Category Name", "keywords": ["kw1", "kw2"]}, ...}
+
+        This method converts to list format expected by categorization methods:
+            [{"name": "Category Name", "keywords": ["kw1", "kw2"]}, ...]
+
+        Lookup priority: team_id > user_id > default
+        Falls back to static JSON categories if Firestore has no data.
+
+        Args:
+            user_id: User's unique identifier (optional)
+            team_id: Team's unique identifier (optional, takes priority)
+
+        Returns:
+            List of category dicts with 'name' and 'keywords' fields
+        """
+        # Priority: team_id > user_id > default
+        lookup_id = team_id or user_id
+        data = self.repository.get_categories(user_id=lookup_id)
+        logger.debug(f"Category lookup: team_id={team_id}, user_id={user_id}, lookup_id={lookup_id}")
+
+        if not data:
+            logger.debug(f"No categories in Firestore for user {user_id}, using static JSON")
+            return self.categories  # Fall back to static JSON
+
+        # Convert dict format to list format
+        categories: list[dict[str, Any]] = []
+        for key, value in data.items():
+            if isinstance(value, dict):
+                name = str(value.get("name", "")).strip()
+                keywords = value.get("keywords", [])
+                if not isinstance(keywords, list):
+                    keywords = []
+                if name:
+                    categories.append({"name": name, "keywords": keywords})
+
+        if categories:
+            keyword_count = sum(len(cat.get("keywords", [])) for cat in categories)
+            logger.info(f"Loaded {len(categories)} categories from Firestore with {keyword_count} total keywords")
+        else:
+            logger.debug(f"Firestore categories empty for user {user_id}, using static JSON")
+            return self.categories
+
         return categories
