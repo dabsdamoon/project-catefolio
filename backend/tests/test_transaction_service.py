@@ -153,7 +153,7 @@ class TestApplyCategoryResults:
             {"index": 0, "categories": ["Shopping", "E-commerce"]},
             {"index": 1, "categories": ["Food"]},
         ]
-        mock_service._apply_category_results(transactions, results)
+        mock_service._apply_category_results(transactions, results, mock_service.categories)
         # Only the first category is applied (no categories array stored)
         assert transactions[0]["category"] == "Shopping"
         assert transactions[1]["category"] == "Food"
@@ -161,13 +161,13 @@ class TestApplyCategoryResults:
     def test_invalid_index_ignored(self, mock_service):
         transactions = [{"category": "Expense"}]
         results = [{"index": 99, "categories": ["Shopping"]}]
-        mock_service._apply_category_results(transactions, results)
+        mock_service._apply_category_results(transactions, results, mock_service.categories)
         assert transactions[0]["category"] == "Expense"  # Unchanged
 
     def test_empty_categories_ignored(self, mock_service):
         transactions = [{"category": "Expense"}]
         results = [{"index": 0, "categories": []}]
-        mock_service._apply_category_results(transactions, results)
+        mock_service._apply_category_results(transactions, results, mock_service.categories)
         assert transactions[0]["category"] == "Expense"  # Unchanged
 
 
@@ -309,3 +309,107 @@ class TestGetJob:
         service = TransactionService(mock_repo)
         job = service.get_job("valid-id")
         assert job["status"] == "processed"
+
+
+class TestKeywordCategorization:
+    """Tests for keyword-based categorization."""
+
+    @pytest.fixture
+    def service_with_keywords(self):
+        """Create a service with categories that have keywords."""
+        mock_repo = MagicMock()
+        mock_categories = [
+            {"name": "Insurance", "keywords": ["BUPA", "Cigna", "Tricare"]},
+            {"name": "Medical", "keywords": ["Hospital", "Clinic", "Pharmacy"]},
+            {"name": "Utilities", "keywords": ["Electric", "Water", "Gas"]},
+            {"name": "Uncategorized", "keywords": []},
+        ]
+        with patch("app.services.transaction_service.InferenceService"), \
+             patch.object(TransactionService, "_load_categories", return_value=mock_categories):
+            service = TransactionService(mock_repo)
+        return service
+
+    def test_keyword_match_in_description(self, service_with_keywords):
+        """Keywords in description are matched."""
+        transactions = [
+            {"description": "BUPA Premium Payment", "category": "Uncategorized", "raw": {}},
+        ]
+        matched = service_with_keywords._apply_keyword_categories(transactions, service_with_keywords.categories)
+        assert 0 in matched
+        assert transactions[0]["category"] == "Insurance"
+
+    def test_keyword_match_case_insensitive(self, service_with_keywords):
+        """Keyword matching is case-insensitive."""
+        transactions = [
+            {"description": "bupa premium", "category": "Uncategorized", "raw": {}},
+            {"description": "CIGNA Health", "category": "Uncategorized", "raw": {}},
+        ]
+        matched = service_with_keywords._apply_keyword_categories(transactions, service_with_keywords.categories)
+        assert len(matched) == 2
+        assert transactions[0]["category"] == "Insurance"
+        assert transactions[1]["category"] == "Insurance"
+
+    def test_keyword_match_in_raw_fields(self, service_with_keywords):
+        """Keywords in raw.note, raw.display, raw.memo are also matched."""
+        transactions = [
+            {"description": "Payment", "category": "Uncategorized", "raw": {"note": "BUPA insurance"}},
+            {"description": "Transfer", "category": "Uncategorized", "raw": {"display": "Hospital visit"}},
+            {"description": "Expense", "category": "Uncategorized", "raw": {"memo": "Electric bill"}},
+        ]
+        matched = service_with_keywords._apply_keyword_categories(transactions, service_with_keywords.categories)
+        assert len(matched) == 3
+        assert transactions[0]["category"] == "Insurance"
+        assert transactions[1]["category"] == "Medical"
+        assert transactions[2]["category"] == "Utilities"
+
+    def test_no_keyword_match_returns_empty(self, service_with_keywords):
+        """Transactions without keyword matches are not in the returned set."""
+        transactions = [
+            {"description": "Random Purchase", "category": "Uncategorized", "raw": {}},
+            {"description": "Coffee Shop", "category": "Uncategorized", "raw": {}},
+        ]
+        matched = service_with_keywords._apply_keyword_categories(transactions, service_with_keywords.categories)
+        assert len(matched) == 0
+        assert transactions[0]["category"] == "Uncategorized"
+        assert transactions[1]["category"] == "Uncategorized"
+
+    def test_multiple_category_matches_stores_extras_in_entity(self, service_with_keywords):
+        """When multiple categories match, extras are stored in entity field."""
+        # Add a category that will also match
+        categories = service_with_keywords.categories + [
+            {"name": "Healthcare", "keywords": ["Hospital", "BUPA"]}
+        ]
+        transactions = [
+            {"description": "BUPA Hospital Payment", "category": "Uncategorized", "entity": "", "raw": {}},
+        ]
+        matched = service_with_keywords._apply_keyword_categories(transactions, categories)
+        assert 0 in matched
+        # First match (Insurance) becomes category, second (Medical) goes to entity
+        assert transactions[0]["category"] == "Insurance"
+        # Medical and Healthcare also matched
+        assert "Medical" in transactions[0]["entity"] or "Healthcare" in transactions[0]["entity"]
+
+    def test_first_category_wins(self, service_with_keywords):
+        """First matching category (in list order) becomes the primary category."""
+        transactions = [
+            {"description": "BUPA Cigna Tricare", "category": "Uncategorized", "raw": {}},
+        ]
+        matched = service_with_keywords._apply_keyword_categories(transactions, service_with_keywords.categories)
+        assert transactions[0]["category"] == "Insurance"
+
+    def test_empty_keywords_list_no_match(self, service_with_keywords):
+        """Categories with empty keywords list don't match."""
+        transactions = [
+            {"description": "Uncategorized transaction", "category": "Uncategorized", "raw": {}},
+        ]
+        matched = service_with_keywords._apply_keyword_categories(transactions, service_with_keywords.categories)
+        assert len(matched) == 0
+
+    def test_missing_raw_field_handled(self, service_with_keywords):
+        """Transactions without raw field are handled gracefully."""
+        transactions = [
+            {"description": "BUPA Payment", "category": "Uncategorized"},
+        ]
+        matched = service_with_keywords._apply_keyword_categories(transactions, service_with_keywords.categories)
+        assert 0 in matched
+        assert transactions[0]["category"] == "Insurance"
