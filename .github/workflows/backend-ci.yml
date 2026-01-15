@@ -86,7 +86,7 @@ jobs:
             --region ${{ env.REGION }} \
             --platform managed \
             --allow-unauthenticated \
-            --set-env-vars "GOOGLE_CLOUD_PROJECT=${{ env.PROJECT_ID }},VERTEX_LOCATION=us-central1,DEMO_MODE=true,ENVIRONMENT=production" \
+            --set-env-vars "GOOGLE_CLOUD_PROJECT=${{ env.PROJECT_ID }},VERTEX_LOCATION=us-central1,DEMO_MODE=true,ENVIRONMENT=production,FRONTEND_URL=https://catefolio-web.vercel.app" \
             --memory 1Gi \
             --cpu 2 \
             --min-instances 0 \
